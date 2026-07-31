@@ -31,10 +31,7 @@ public class OrdemServicoConfiguration : IEntityTypeConfiguration<OrdemServico>
         builder.Property(x => x.Longitude).HasColumnName("Longitude");
         builder.Ignore(x => x.Coordenada);
 
-        builder.HasOne(x => x.TipoAuditoria)
-            .WithMany()
-            .HasForeignKey(x => x.TipoAuditoriaId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.Property(x => x.Fiscalizacao).HasConversion<string>().HasMaxLength(20);
 
         builder.HasMany(x => x.Fotos)
             .WithOne()
@@ -61,6 +58,7 @@ public class OrdemServicoConfiguration : IEntityTypeConfiguration<OrdemServico>
 
         builder.HasIndex(x => x.Numero);
         builder.HasIndex(x => x.Empresa);
-        builder.HasIndex(x => x.Data);
+        builder.HasIndex(x => x.RecebimentoSfit);
+        builder.HasIndex(x => x.DataFinal);
     }
 }

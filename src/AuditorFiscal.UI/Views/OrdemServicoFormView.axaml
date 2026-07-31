@@ -3,6 +3,7 @@
              xmlns:vm="using:AuditorFiscal.UI.ViewModels"
              xmlns:entities="using:AuditorFiscal.Domain.Entities"
              xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:local="using:AuditorFiscal.UI.Converters"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
@@ -11,14 +12,16 @@
 
     <UserControl.Resources>
         <ResourceDictionary>
+            <local:SituacaoParaDescricaoConverter x:Key="SituacaoParaDescricao" />
+
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="BordaBrush" Color="#E2E8F0" />
                     <SolidColorBrush x:Key="CartaoBrush" Color="#F8FAFC" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="BordaBrush" Color="#27272A" />
-                    <SolidColorBrush x:Key="CartaoBrush" Color="#131316" />
+                    <SolidColorBrush x:Key="BordaBrush" Color="#3F3F46" />
+                    <SolidColorBrush x:Key="CartaoBrush" Color="#232326" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -32,7 +35,7 @@
                 <TextBlock Text="{Binding TituloPagina}" Classes="pageTitle" VerticalAlignment="Center" />
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <Button Content="★ Favorito" Command="{Binding AlternarFavoritoCommand}" />
+                <Button Content="{Binding FavoritoTexto}" Command="{Binding AlternarFavoritoCommand}" />
                 <Button Content="Exportar PDF" Command="{Binding ExportarPdfCommand}" IsEnabled="{Binding PodeExportar}" />
                 <Button Content="Imprimir" Command="{Binding ImprimirCommand}" IsEnabled="{Binding PodeExportar}" />
                 <Button Content="Excluir" Command="{Binding ExcluirCommand}" Foreground="#EF4444" />
@@ -48,25 +51,33 @@
             </StackPanel>
         </Border>
 
-        <ScrollViewer>
-            <Grid ColumnDefinitions="*,340" MaxWidth="1040" HorizontalAlignment="Left">
+        <TabControl SelectedIndex="{Binding AbaSelecionada}">
+        <TabItem Header="Dados">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <Grid ColumnDefinitions="*,340" MaxWidth="1040" HorizontalAlignment="Center">
 
                 <!-- Dados principais -->
                 <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
 
                     <Grid ColumnDefinitions="*,16,*">
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Número da OS" Classes="fieldLabel" />
+                            <TextBlock Text="O.S. N°" Classes="fieldLabel" />
                             <TextBox Text="{Binding Numero}" IsEnabled="{Binding IsNovo}" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Situação" Classes="fieldLabel" />
                             <ComboBox ItemsSource="{Binding SituacoesDisponiveis}"
-                                      SelectedItem="{Binding SituacaoSelecionada}" HorizontalAlignment="Stretch" />
+                                      SelectedItem="{Binding SituacaoSelecionada}" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource SituacaoParaDescricao}}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock Text="Empresa" Classes="fieldLabel" />
+                    <TextBlock Text="Descrição / Cliente" Classes="fieldLabel" />
                     <TextBox Text="{Binding Empresa}" />
 
                     <Grid ColumnDefinitions="*,16,*">
@@ -75,15 +86,9 @@
                             <TextBox Text="{Binding Cnpj}" PlaceholderText="00.000.000/0000-00" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Tipo de Auditoria" Classes="fieldLabel" />
-                            <ComboBox ItemsSource="{Binding TiposAuditoria}" SelectedItem="{Binding TipoAuditoriaSelecionado}"
-                                      HorizontalAlignment="Stretch">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate x:DataType="entities:TipoAuditoria">
-                                        <TextBlock Text="{Binding Nome}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
+                            <TextBlock Text="3. Fiscalização" Classes="fieldLabel" />
+                            <ComboBox ItemsSource="{Binding TiposFiscalizacaoDisponiveis}"
+                                      SelectedItem="{Binding FiscalizacaoSelecionada}" HorizontalAlignment="Stretch" />
                         </StackPanel>
                     </Grid>
 
@@ -101,16 +106,50 @@
                         </StackPanel>
                     </Grid>
 
+                    <TextBlock Text="Etapas do fluxo SFIT" Classes="sectionTitle" Margin="0,14,0,0" />
+
                     <Grid ColumnDefinitions="*,16,*">
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Data" Classes="fieldLabel" />
-                            <DatePicker SelectedDate="{Binding Data}" HorizontalAlignment="Stretch" />
+                            <TextBlock Text="1. Recebimento da OS no SFIT" Classes="fieldLabel" />
+                            <CalendarDatePicker SelectedDate="{Binding RecebimentoSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Hora" Classes="fieldLabel" />
-                            <TimePicker SelectedTime="{Binding Hora}" HorizontalAlignment="Stretch" />
+                            <TextBlock Text="2. Abertura no SFIT" Classes="fieldLabel" />
+                            <CalendarDatePicker SelectedDate="{Binding AberturaSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
                         </StackPanel>
                     </Grid>
+
+                    <TextBlock Text="3. Data da Fiscalização" Classes="fieldLabel" />
+                    <CalendarDatePicker SelectedDate="{Binding DataFiscalizacao}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+
+                    <Grid ColumnDefinitions="*,16,*">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="4. Prazo recebimento documentos [NAD]" Classes="fieldLabel" />
+                            <CalendarDatePicker SelectedDate="{Binding PrazoNad}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="5. Prazo cumprimento obrigações [NCO]" Classes="fieldLabel" />
+                            <CalendarDatePicker SelectedDate="{Binding PrazoNco}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,16,*">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="6. Elaboração dos autos" Classes="fieldLabel" />
+                            <CalendarDatePicker SelectedDate="{Binding ElaboracaoAutos}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="7. Data final" Classes="fieldLabel" />
+                            <CalendarDatePicker SelectedDate="{Binding DataFinal}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox Content="Tem NCRE?" IsChecked="{Binding TemNcre}" Margin="0,14,0,0"
+                              AutomationProperties.AutomationId="ChkTemNcre" />
+                    <StackPanel IsVisible="{Binding TemNcre}">
+                        <TextBlock Text="Informe o prazo do NCRE" Classes="fieldLabel" />
+                        <CalendarDatePicker SelectedDate="{Binding PrazoNcre}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                    </StackPanel>
 
                     <Grid ColumnDefinitions="*,16,*">
                         <StackPanel Grid.Column="0">
@@ -125,20 +164,6 @@
 
                     <TextBlock Text="Observações" Classes="fieldLabel" />
                     <TextBox Text="{Binding Observacoes}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" />
-
-                    <TextBlock Text="Tags" Classes="fieldLabel" />
-                    <ItemsControl ItemsSource="{Binding Tags}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:TagSelecionavelViewModel">
-                                <CheckBox Content="{Binding Nome}" IsChecked="{Binding Selecionada}" Margin="0,0,12,0" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
                 </StackPanel>
 
                 <!-- Anexos + timeline -->
@@ -206,29 +231,37 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Padding="14" CornerRadius="8" Background="{DynamicResource CartaoBrush}"
-                            BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1"
-                            IsVisible="{Binding PodeExportar}">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Timeline da auditoria" Classes="sectionTitle" />
-                            <ItemsControl ItemsSource="{Binding Timeline}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="entities:TimelineEvento">
-                                        <StackPanel Margin="0,0,0,8">
-                                            <TextBlock Text="{Binding OcorridoEm, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
-                                                       FontSize="10" Opacity="0.55" />
-                                            <TextBlock Text="{Binding Descricao}" FontSize="12" TextWrapping="Wrap" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Border>
-
                 </StackPanel>
 
             </Grid>
         </ScrollViewer>
+        </TabItem>
+
+        <TabItem Header="Histórico" IsEnabled="{Binding PodeExportar}">
+            <ScrollViewer>
+                <StackPanel Margin="24" MaxWidth="700" HorizontalAlignment="Center" Spacing="10">
+                    <TextBlock Text="Histórico de alterações" Classes="pageTitle" />
+                    <TextBlock Text="Todas as alterações registradas nesta O.S., da mais recente para a mais antiga."
+                               Opacity="0.6" FontSize="12" Margin="0,0,0,10" />
+                    <ItemsControl ItemsSource="{Binding Timeline}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="entities:TimelineEvento">
+                                <Border Padding="12" CornerRadius="8" Margin="0,0,0,8"
+                                        Background="{DynamicResource CartaoBrush}"
+                                        BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding OcorridoEm, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                   FontSize="11" Opacity="0.55" />
+                                        <TextBlock Text="{Binding Descricao}" FontSize="13" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+    </TabControl>
 
     </DockPanel>
 

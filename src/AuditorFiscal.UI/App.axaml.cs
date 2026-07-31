@@ -51,6 +51,7 @@ public partial class App : global::Avalonia.Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            AplicarRestauracaoPendente();
             AplicarMigracoes();
 
             desktop.MainWindow = new MainWindow
@@ -87,10 +88,11 @@ public partial class App : global::Avalonia.Application
 
         services.AddSingleton<MainViewModel>();
         services.AddTransient<HomeViewModel>();
-        services.AddTransient<AgendaViewModel>();
+        services.AddTransient<GanttViewModel>();
         services.AddTransient<BancoDadosViewModel>();
         services.AddTransient<OrdemServicoFormViewModel>();
         services.AddTransient<ConfiguracoesViewModel>();
+        services.AddTransient<DashboardViewModel>();
     }
 
     private void AplicarMigracoes()
@@ -98,6 +100,22 @@ public partial class App : global::Avalonia.Application
         using var escopo = _host!.Services.CreateScope();
         var contexto = escopo.ServiceProvider.GetRequiredService<AuditorFiscalDbContext>();
         contexto.Database.Migrate();
+    }
+
+    /// <summary>
+    /// Precisa rodar antes de qualquer conexão com o banco ser aberta: uma restauração
+    /// pendente sobrescreve o arquivo do banco, o que falharia (ou corromperia dados) se
+    /// já houvesse uma conexão ativa apontando para ele.
+    /// </summary>
+    private void AplicarRestauracaoPendente()
+    {
+        var backup = _host!.Services.GetRequiredService<IBackupService>();
+
+        // Task.Run tira a chamada do contexto de sincronização da UI antes de bloquear:
+        // sem isso, os "await" internos tentariam retomar na mesma thread da UI que está
+        // bloqueada aqui esperando o resultado — um deadlock clássico que travava a
+        // abertura do app.
+        Task.Run(() => backup.AplicarRestauracaoPendenteAsync()).GetAwaiter().GetResult();
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 using AuditorFiscal.Domain.Entities;
+using AuditorFiscal.Domain.Enums;
 using AuditorFiscal.Domain.ValueObjects;
 using AuditorFiscal.Persistence;
-using AuditorFiscal.Persistence.Configurations;
 using AuditorFiscal.Persistence.Security;
 using AwesomeAssertions;
 using Microsoft.Data.Sqlite;
@@ -33,9 +33,14 @@ public class SqliteEncryptionTests : IDisposable
                 endereco: "Rua Exemplo, 123",
                 cidade: "São Paulo",
                 responsavel: "João da Silva",
-                data: new DateOnly(2026, 8, 1),
-                hora: new TimeOnly(9, 0),
-                tipoAuditoriaId: TipoAuditoriaSeed.AuditoriaFiscal,
+                fiscalizacao: TipoFiscalizacao.Direta,
+                recebimentoSfit: new DateOnly(2026, 8, 1),
+                aberturaSfit: new DateOnly(2026, 8, 3),
+                dataFiscalizacao: new DateOnly(2026, 8, 8),
+                prazoNad: new DateOnly(2026, 8, 15),
+                prazoNco: new DateOnly(2026, 8, 30),
+                elaboracaoAutos: new DateOnly(2026, 9, 10),
+                dataFinal: new DateOnly(2026, 9, 20),
                 momento: DateTimeOffset.UtcNow,
                 coordenada: new Coordenada(-23.55, -46.63));
 

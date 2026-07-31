@@ -38,18 +38,22 @@ public static class RelatorioBuilder
             new(EstiloLinha.Campo, "Responsável", os.Responsavel),
             new(EstiloLinha.Separador, string.Empty),
             new(EstiloLinha.Subtitulo, "Auditoria"),
-            new(EstiloLinha.Campo, "Data", os.Data.ToString("dd/MM/yyyy")),
-            new(EstiloLinha.Campo, "Hora", os.Hora.ToString("HH\\:mm")),
             new(EstiloLinha.Campo, "Situação", os.Situacao.Descricao()),
-            new(EstiloLinha.Campo, "Tipo", os.TipoAuditoria?.Nome ?? "-")
+            new(EstiloLinha.Campo, "Fiscalização", os.Fiscalizacao.Descricao()),
+            new(EstiloLinha.Separador, string.Empty),
+            new(EstiloLinha.Subtitulo, "Fluxo SFIT"),
+            new(EstiloLinha.Campo, "1. Recebimento SFIT", os.RecebimentoSfit.ToString("dd/MM/yyyy")),
+            new(EstiloLinha.Campo, "2. Abertura SFIT", os.AberturaSfit.ToString("dd/MM/yyyy")),
+            new(EstiloLinha.Campo, "3. Fiscalização", os.DataFiscalizacao.ToString("dd/MM/yyyy")),
+            new(EstiloLinha.Campo, "4. Prazo NAD", os.PrazoNad.ToString("dd/MM/yyyy")),
+            new(EstiloLinha.Campo, "5. Prazo NCO", os.PrazoNco.ToString("dd/MM/yyyy")),
+            new(EstiloLinha.Campo, "6. Elaboração dos autos", os.ElaboracaoAutos.ToString("dd/MM/yyyy")),
+            new(EstiloLinha.Campo, "7. Data final", os.DataFinal.ToString("dd/MM/yyyy"))
         };
 
         if (os.Coordenada is not null)
             linhas.Add(new LinhaRelatorio(EstiloLinha.Campo, "Coordenadas",
                 $"{os.Coordenada.Latitude:F6}, {os.Coordenada.Longitude:F6}"));
-
-        if (os.Tags.Count > 0)
-            linhas.Add(new LinhaRelatorio(EstiloLinha.Campo, "Tags", string.Join(", ", os.Tags.Select(t => t.Nome))));
 
         if (!string.IsNullOrWhiteSpace(os.Observacoes))
         {
@@ -72,12 +76,6 @@ public static class RelatorioBuilder
                     evento.OcorridoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm"), evento.Descricao));
         }
 
-        if (!string.IsNullOrWhiteSpace(os.HashIntegridade))
-        {
-            linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
-            linhas.Add(new LinhaRelatorio(EstiloLinha.Texto, $"Hash de integridade (SHA-256): {os.HashIntegridade}"));
-        }
-
         return new DocumentoRelatorio($"OS {os.Numero}", linhas);
     }
 
@@ -96,9 +94,9 @@ public static class RelatorioBuilder
         linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
         linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Ordens de serviço"));
 
-        foreach (var os in ordens.OrderBy(o => o.Data).ThenBy(o => o.Hora))
+        foreach (var os in ordens.OrderBy(o => o.RecebimentoSfit))
             linhas.Add(new LinhaRelatorio(EstiloLinha.Campo,
-                $"{os.Data:dd/MM/yyyy} {os.Hora:HH\\:mm}  {os.Numero}",
+                $"{os.RecebimentoSfit:dd/MM/yyyy} → {os.DataFinal:dd/MM/yyyy}  {os.Numero}",
                 $"{os.Empresa} — {os.Cidade} — {os.Situacao.Descricao()}"));
 
         return new DocumentoRelatorio(titulo, linhas);

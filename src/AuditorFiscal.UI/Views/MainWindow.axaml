@@ -13,19 +13,34 @@
 
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+N" Command="{Binding NovaOrdemServicoCommand}" />
-        <KeyBinding Gesture="Ctrl+G" Command="{Binding AgendaCommand}" />
+        <KeyBinding Gesture="Ctrl+G" Command="{Binding VisualizarCommand}" />
         <KeyBinding Gesture="Ctrl+B" Command="{Binding BancoDadosCommand}" />
         <KeyBinding Gesture="Ctrl+H" Command="{Binding InicioCommand}" />
         <KeyBinding Gesture="Ctrl+D" Command="{Binding AlternarTemaCommand}" />
+        <KeyBinding Gesture="Ctrl+K" Command="{Binding DashboardCommand}" />
         <KeyBinding Gesture="Escape" Command="{Binding VoltarCommand}" />
     </Window.KeyBindings>
 
-    <DockPanel>
+    <DockPanel Background="{DynamicResource AppBackgroundBrush}">
         <Border DockPanel.Dock="Top" Padding="14,8" BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <TextBlock Grid.Column="0" Text="Auditor Fiscal" FontWeight="SemiBold"
                            VerticalAlignment="Center" Opacity="0.85" />
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                            HorizontalAlignment="Center">
+                    <Button Content="🏠 Início" Classes="navBar" Command="{Binding InicioCommand}"
+                            ToolTip.Tip="Início (Ctrl+H)" />
+                    <Button Content="📋 Nova O.S." Classes="navBar" Command="{Binding NovaOrdemServicoCommand}"
+                            ToolTip.Tip="Nova Ordem de Serviço (Ctrl+N)" />
+                    <Button Content="📊 Cronograma" Classes="navBar" Command="{Binding VisualizarCommand}"
+                            ToolTip.Tip="Cronograma GANTT (Ctrl+G)" />
+                    <Button Content="🗄 Banco de Dados" Classes="navBar" Command="{Binding BancoDadosCommand}"
+                            ToolTip.Tip="Banco de Dados (Ctrl+B)" />
+                    <Button Content="📈 Dashboard" Classes="navBar" Command="{Binding DashboardCommand}"
+                            ToolTip.Tip="Dashboard (Ctrl+K)" />
+                </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
                     <Button Content="{Binding IconeTema}" Command="{Binding AlternarTemaCommand}"

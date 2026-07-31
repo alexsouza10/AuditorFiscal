@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AuditorFiscal.Persistence.Migrations
 {
     [DbContext(typeof(AuditorFiscalDbContext))]
-    [Migration("20260730231342_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260731170441_AdicionarNcre")]
+    partial class AdicionarNcre
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,7 +23,6 @@ namespace AuditorFiscal.Persistence.Migrations
             modelBuilder.Entity("AuditorFiscal.Domain.Entities.ArquivoArmazenado", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("AtualizadoEm")
@@ -68,7 +67,6 @@ namespace AuditorFiscal.Persistence.Migrations
             modelBuilder.Entity("AuditorFiscal.Domain.Entities.BackupRegistro", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("AtualizadoEm")
@@ -101,7 +99,6 @@ namespace AuditorFiscal.Persistence.Migrations
             modelBuilder.Entity("AuditorFiscal.Domain.Entities.LogInterno", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Acao")
@@ -132,7 +129,9 @@ namespace AuditorFiscal.Persistence.Migrations
             modelBuilder.Entity("AuditorFiscal.Domain.Entities.OrdemServico", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("AberturaSfit")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("AtualizadoEm")
@@ -152,7 +151,10 @@ namespace AuditorFiscal.Persistence.Migrations
                     b.Property<DateTimeOffset>("CriadoEm")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateOnly>("Data")
+                    b.Property<DateOnly>("DataFinal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ElaboracaoAutos")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Empresa")
@@ -168,13 +170,23 @@ namespace AuditorFiscal.Persistence.Migrations
                     b.Property<bool>("Favorito")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Fiscalizacao")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("HashIntegridade")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
-                    b.Property<TimeOnly>("Hora")
-                        .HasColumnType("TEXT");
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL")
+                        .HasColumnName("Latitude");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL")
+                        .HasColumnName("Longitude");
 
                     b.Property<string>("Numero")
                         .IsRequired()
@@ -183,6 +195,18 @@ namespace AuditorFiscal.Persistence.Migrations
 
                     b.Property<string>("Observacoes")
                         .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("PrazoNad")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("PrazoNco")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("PrazoNcre")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("RecebimentoSfit")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Responsavel")
@@ -195,18 +219,18 @@ namespace AuditorFiscal.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("TipoAuditoriaId")
-                        .HasColumnType("TEXT");
+                    b.Property<bool>("TemNcre")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Data");
+                    b.HasIndex("DataFinal");
 
                     b.HasIndex("Empresa");
 
                     b.HasIndex("Numero");
 
-                    b.HasIndex("TipoAuditoriaId");
+                    b.HasIndex("RecebimentoSfit");
 
                     b.ToTable("OrdensServico", (string)null);
                 });
@@ -214,7 +238,6 @@ namespace AuditorFiscal.Persistence.Migrations
             modelBuilder.Entity("AuditorFiscal.Domain.Entities.Tag", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("AtualizadoEm")
@@ -244,7 +267,6 @@ namespace AuditorFiscal.Persistence.Migrations
             modelBuilder.Entity("AuditorFiscal.Domain.Entities.TimelineEvento", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("AtualizadoEm")
@@ -274,7 +296,6 @@ namespace AuditorFiscal.Persistence.Migrations
             modelBuilder.Entity("AuditorFiscal.Domain.Entities.TipoAuditoria", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("Ativo")
@@ -380,40 +401,6 @@ namespace AuditorFiscal.Persistence.Migrations
                     b.HasIndex("OrdemServicoId");
 
                     b.ToTable("Fotos", (string)null);
-                });
-
-            modelBuilder.Entity("AuditorFiscal.Domain.Entities.OrdemServico", b =>
-                {
-                    b.HasOne("AuditorFiscal.Domain.Entities.TipoAuditoria", "TipoAuditoria")
-                        .WithMany()
-                        .HasForeignKey("TipoAuditoriaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.OwnsOne("AuditorFiscal.Domain.ValueObjects.Coordenada", "Coordenada", b1 =>
-                        {
-                            b1.Property<Guid>("OrdemServicoId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<double>("Latitude")
-                                .HasColumnType("REAL")
-                                .HasColumnName("Latitude");
-
-                            b1.Property<double>("Longitude")
-                                .HasColumnType("REAL")
-                                .HasColumnName("Longitude");
-
-                            b1.HasKey("OrdemServicoId");
-
-                            b1.ToTable("OrdensServico");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrdemServicoId");
-                        });
-
-                    b.Navigation("Coordenada");
-
-                    b.Navigation("TipoAuditoria");
                 });
 
             modelBuilder.Entity("AuditorFiscal.Domain.Entities.TimelineEvento", b =>

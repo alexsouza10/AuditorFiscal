@@ -33,13 +33,16 @@ public partial class MainViewModel : ViewModelBase
     private void NovaOrdemServico() => _navigation.NavegarPara<OrdemServicoFormViewModel>();
 
     [RelayCommand]
-    private void Agenda() => _navigation.NavegarPara<AgendaViewModel>();
+    private void Visualizar() => _navigation.NavegarPara<GanttViewModel>();
 
     [RelayCommand]
     private void BancoDados() => _navigation.NavegarPara<BancoDadosViewModel>();
 
     [RelayCommand]
     private void Configuracoes() => _navigation.NavegarPara<ConfiguracoesViewModel>();
+
+    [RelayCommand]
+    private void Dashboard() => _navigation.NavegarPara<DashboardViewModel>();
 
     [RelayCommand]
     private void Voltar() => _navigation.Voltar();

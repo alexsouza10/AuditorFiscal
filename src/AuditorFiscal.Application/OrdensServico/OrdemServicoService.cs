@@ -36,12 +36,20 @@ public class OrdemServicoService(
             dto.Endereco,
             dto.Cidade,
             dto.Responsavel,
-            dto.Data,
-            dto.Hora,
-            dto.TipoAuditoriaId,
+            dto.Fiscalizacao,
+            dto.RecebimentoSfit,
+            dto.AberturaSfit,
+            dto.DataFiscalizacao,
+            dto.PrazoNad,
+            dto.PrazoNco,
+            dto.ElaboracaoAutos,
+            dto.DataFinal,
             clock.UtcNow,
             dto.Observacoes,
             CriarCoordenada(dto.Latitude, dto.Longitude));
+
+        if (dto.TemNcre)
+            ordemServico.DefinirNcre(true, dto.PrazoNcre, clock.UtcNow);
 
         await AnexarArquivosAsync(ordemServico, arquivos, ct);
         AtualizarHashIntegridade(ordemServico);
@@ -72,12 +80,20 @@ public class OrdemServicoService(
             dto.Endereco,
             dto.Cidade,
             dto.Responsavel,
-            dto.Data,
-            dto.Hora,
-            dto.TipoAuditoriaId,
+            dto.Fiscalizacao,
+            dto.RecebimentoSfit,
+            dto.AberturaSfit,
+            dto.DataFiscalizacao,
+            dto.PrazoNad,
+            dto.PrazoNco,
+            dto.ElaboracaoAutos,
+            dto.DataFinal,
             dto.Observacoes,
             CriarCoordenada(dto.Latitude, dto.Longitude),
             clock.UtcNow);
+
+        if (dto.TemNcre != ordemServico.TemNcre || dto.PrazoNcre != ordemServico.PrazoNcre)
+            ordemServico.DefinirNcre(dto.TemNcre, dto.PrazoNcre, clock.UtcNow);
 
         await AnexarArquivosAsync(ordemServico, novosArquivos, ct);
         AtualizarHashIntegridade(ordemServico);
@@ -103,13 +119,13 @@ public class OrdemServicoService(
         return Result.Success();
     }
 
-    public async Task<Result> ReagendarAsync(Guid id, DateOnly data, TimeOnly hora, CancellationToken ct = default)
+    public async Task<Result> AdiarAsync(Guid id, int dias, CancellationToken ct = default)
     {
         var ordemServico = await unitOfWork.OrdensServico.ObterComDetalhesAsync(id, ct);
         if (ordemServico is null)
             return Result.Failure("Ordem de serviço não encontrada.");
 
-        ordemServico.Reagendar(data, hora, clock.UtcNow);
+        ordemServico.Adiar(dias, clock.UtcNow);
         AtualizarHashIntegridade(ordemServico);
         await unitOfWork.SalvarAlteracoesAsync(ct);
 
@@ -186,9 +202,6 @@ public class OrdemServicoService(
     public Task<string> SugerirProximoNumeroAsync(CancellationToken ct = default) =>
         unitOfWork.OrdensServico.SugerirProximoNumeroAsync(ct);
 
-    public Task<IReadOnlyList<TipoAuditoria>> ListarTiposAuditoriaAtivosAsync(CancellationToken ct = default) =>
-        unitOfWork.TiposAuditoria.ListarAtivosAsync(ct);
-
     public Task<IReadOnlyList<Tag>> ListarTagsAsync(CancellationToken ct = default) =>
         unitOfWork.Tags.ListarAsync(ct);
 
@@ -259,8 +272,10 @@ public class OrdemServicoService(
     {
         var conteudo = string.Join('|',
             ordemServico.Numero, ordemServico.Empresa, ordemServico.Cnpj.Numero, ordemServico.Endereco,
-            ordemServico.Cidade, ordemServico.Responsavel, ordemServico.Data, ordemServico.Hora,
-            ordemServico.Situacao, ordemServico.TipoAuditoriaId, ordemServico.Observacoes);
+            ordemServico.Cidade, ordemServico.Responsavel, ordemServico.Fiscalizacao,
+            ordemServico.RecebimentoSfit, ordemServico.AberturaSfit, ordemServico.DataFiscalizacao,
+            ordemServico.PrazoNad, ordemServico.PrazoNco, ordemServico.ElaboracaoAutos, ordemServico.DataFinal,
+            ordemServico.Situacao, ordemServico.Observacoes);
 
         ordemServico.DefinirHashIntegridade(hashService.ComputeSha256(conteudo));
     }

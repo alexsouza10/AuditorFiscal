@@ -19,7 +19,9 @@ public class DialogService : IDialogService
 
     private static async Task<bool> MostrarAsync(string titulo, string mensagem, string textoPrimario, string? textoSecundario)
     {
-        var resultado = new TaskCompletionSource<bool>();
+        // "resultado" só é lido depois que ShowDialog retorna, ou seja, depois que a janela
+        // fecha — por isso cada botão precisa fechar a janela, não só anotar a escolha.
+        var resultado = false;
 
         var botaoPrimario = new Button
         {
@@ -36,6 +38,8 @@ public class DialogService : IDialogService
             HorizontalAlignment = HorizontalAlignment.Right
         };
 
+        Window janela = null!;
+
         if (textoSecundario is not null)
         {
             var botaoSecundario = new Button
@@ -45,12 +49,16 @@ public class DialogService : IDialogService
                 HorizontalContentAlignment = HorizontalAlignment.Center
             };
             botoes.Children.Add(botaoSecundario);
-            botaoSecundario.Click += (_, _) => resultado.TrySetResult(false);
+            botaoSecundario.Click += (_, _) =>
+            {
+                resultado = false;
+                janela.Close();
+            };
         }
 
         botoes.Children.Add(botaoPrimario);
 
-        var janela = new Window
+        janela = new Window
         {
             Title = titulo,
             SizeToContent = SizeToContent.WidthAndHeight,
@@ -71,10 +79,13 @@ public class DialogService : IDialogService
             }
         };
 
-        botaoPrimario.Click += (_, _) => resultado.TrySetResult(true);
-        janela.Closed += (_, _) => resultado.TrySetResult(false);
+        botaoPrimario.Click += (_, _) =>
+        {
+            resultado = true;
+            janela.Close();
+        };
 
         await janela.ShowDialog(JanelaAtual.Obter());
-        return await resultado.Task;
+        return resultado;
     }
 }

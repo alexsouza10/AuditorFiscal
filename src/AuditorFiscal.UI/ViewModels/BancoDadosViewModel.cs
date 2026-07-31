@@ -4,10 +4,12 @@ using AuditorFiscal.Application.OrdensServico;
 using AuditorFiscal.Application.OrdensServico.Dtos;
 using AuditorFiscal.Domain.Entities;
 using AuditorFiscal.Domain.Enums;
+using AuditorFiscal.UI.Messaging;
 using AuditorFiscal.UI.Services;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AuditorFiscal.UI.ViewModels;
 
@@ -27,7 +29,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string? _termoBusca;
     [ObservableProperty] private SituacaoOS? _situacaoFiltro;
     [ObservableProperty] private string? _empresaFiltro;
-    [ObservableProperty] private TagSelecionavelViewModel? _tagFiltro;
     [ObservableProperty] private bool _somenteFavoritos;
     [ObservableProperty] private OrdemServico? _selecionada;
     [ObservableProperty] private string? _mensagemStatus;
@@ -39,7 +40,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<OrdemServico> Resultados { get; } = [];
     public ObservableCollection<string> Empresas { get; } = [];
-    public ObservableCollection<TagSelecionavelViewModel> Tags { get; } = [];
     public ObservableCollection<BarraDashboardViewModel> DistribuicaoSituacao { get; } = [];
     public ObservableCollection<BarraDashboardViewModel> DistribuicaoTipo { get; } = [];
     public ObservableCollection<LogInterno> Logs { get; } = [];
@@ -74,6 +74,8 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
             await BuscarAsync();
         };
 
+        WeakReferenceMessenger.Default.Register<OrdemServicoAlteradaMessage>(this, async (_, _) => await BuscarAsync());
+
         _ = InicializarAsync();
     }
 
@@ -81,7 +83,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     partial void OnSituacaoFiltroChanged(SituacaoOS? value) => ReiniciarDebounce();
     partial void OnEmpresaFiltroChanged(string? value) => ReiniciarDebounce();
     partial void OnSomenteFavoritosChanged(bool value) => ReiniciarDebounce();
-    partial void OnTagFiltroChanged(TagSelecionavelViewModel? value) => ReiniciarDebounce();
 
     partial void OnSelecionadaChanged(OrdemServico? value)
     {
@@ -102,7 +103,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         {
             Termo = TermoBusca,
             Situacao = SituacaoFiltro,
-            TagId = TagFiltro?.Id,
             SomenteFavoritos = SomenteFavoritos
         };
 
@@ -125,7 +125,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         TermoBusca = null;
         SituacaoFiltro = null;
         EmpresaFiltro = null;
-        TagFiltro = null;
         SomenteFavoritos = false;
         await BuscarAsync();
     }
@@ -138,6 +137,18 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
 
         var formulario = _navigation.Resolver<OrdemServicoFormViewModel>();
         await formulario.CarregarParaEdicaoAsync(Selecionada.Id);
+        _navigation.NavegarPara(formulario);
+    }
+
+    [RelayCommand]
+    private async Task AbrirHistoricoAsync()
+    {
+        if (Selecionada is null)
+            return;
+
+        var formulario = _navigation.Resolver<OrdemServicoFormViewModel>();
+        await formulario.CarregarParaEdicaoAsync(Selecionada.Id);
+        formulario.AbaSelecionada = 1;
         _navigation.NavegarPara(formulario);
     }
 
@@ -155,6 +166,7 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         Selecionada = null;
         await BuscarAsync();
         MensagemStatus = "Ordem de serviço excluída.";
+        WeakReferenceMessenger.Default.Send(new OrdemServicoAlteradaMessage());
     }
 
     [RelayCommand]
@@ -167,6 +179,7 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         var id = Selecionada.Id;
         await BuscarAsync();
         Selecionada = Resultados.FirstOrDefault(o => o.Id == id);
+        WeakReferenceMessenger.Default.Send(new OrdemServicoAlteradaMessage());
     }
 
     [RelayCommand]
@@ -231,20 +244,24 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
 
     private async Task InicializarAsync()
     {
-        var empresas = await _ordemServicoService.ListarEmpresasAsync();
-        Empresas.Clear();
-        foreach (var empresa in empresas)
-            Empresas.Add(empresa);
+        // Os resultados precisam aparecer mesmo que empresas/tags/logs falhem ao carregar
+        // (ex.: banco ainda inicializando) — por isso rodam à parte, nunca bloqueando a busca.
+        try
+        {
+            var empresas = await _ordemServicoService.ListarEmpresasAsync();
+            Empresas.Clear();
+            foreach (var empresa in empresas)
+                Empresas.Add(empresa);
 
-        var tags = await _ordemServicoService.ListarTagsAsync();
-        Tags.Clear();
-        foreach (var tag in tags)
-            Tags.Add(new TagSelecionavelViewModel(tag.Id, tag.Nome, tag.Cor, false));
-
-        var logs = await _ordemServicoService.ListarLogsAsync(30);
-        Logs.Clear();
-        foreach (var log in logs)
-            Logs.Add(log);
+            var logs = await _ordemServicoService.ListarLogsAsync(30);
+            Logs.Clear();
+            foreach (var log in logs)
+                Logs.Add(log);
+        }
+        catch (Exception excecao)
+        {
+            MensagemStatus = $"Falha ao carregar filtros: {excecao.Message}";
+        }
 
         await BuscarAsync();
     }
@@ -275,7 +292,7 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         }
 
         var porTipo = resultados
-            .GroupBy(o => o.TipoAuditoria?.Nome ?? "Sem tipo")
+            .GroupBy(o => o.Fiscalizacao.Descricao())
             .Select(g => (Nome: g.Key, Quantidade: g.Count()))
             .OrderByDescending(x => x.Quantidade)
             .Take(6)
@@ -306,7 +323,11 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         _debounceBusca.Start();
     }
 
-    public void Dispose() => _debounceBusca.Stop();
+    public void Dispose()
+    {
+        _debounceBusca.Stop();
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+    }
 }
 
 public sealed class BarraDashboardViewModel(string rotulo, int quantidade, double proporcao, string cor)

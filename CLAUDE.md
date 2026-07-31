@@ -263,3 +263,19 @@ Seguir rigorosamente:
 ## Objetivo Final
 
 Entregar um aplicativo robusto, responsivo (que lida perfeitamente com redimensionamentos), rápido e intuitivo. Deve fornecer ao Auditor Fiscal uma visão gerencial clara (através do Gantt) e ferramentas ágeis de registro, operando de maneira segura e eficiente, mesmo em hardwares mais antigos.
+
+---
+
+## Status da implementação (atualizado)
+
+O plano do CLAUDE V2.md foi implementado por cima da base já construída a partir do CLAUDE.md original. Decisões de continuidade entre as duas versões:
+
+- **Fluxo SFIT substitui Data/Hora único.** `OrdemServico` agora tem `RecebimentoSfit`, `AberturaSfit`, `PrazoNad`, `PrazoNco`, `ElaboracaoAutos`, `DataFinal` (todas `DateOnly`) e `Fiscalizacao` (enum Direta/Indireta/Mista), validados em sequência crescente (`AberturaSfit >= RecebimentoSfit >= …`).
+- **TipoAuditoria (V1) foi descontinuado** em favor do enum `Fiscalizacao`, mais simples e alinhado ao V2. A tabela/seed permanecem no schema por segurança de migração, mas não são mais referenciados pela UI.
+- **Situação (Agendada/EmAndamento/Concluída/Adiada/Cancelada)** foi mantida do V1 mesmo não estando na lista literal de campos do V2, pois alimenta o dashboard, os filtros do Banco de Dados e a cor do card no Gantt — sem ela não haveria como responder "o que está em aberto".
+- **Cronograma GANTT** (`GanttViewModel`/`GanttView`) substitui a agenda semanal: grade de meses, barra por O.S. dividida em 5 segmentos coloridos entre as 6 datas do fluxo, linha vertical "HOJE" e legenda fixa. É totalmente responsivo via `MultiBinding` com conversores (`ProporcaoParaPixelsConverter`/`ProporcaoParaMargemConverter`) que recalculam pixels a partir da largura real do contêiner.
+- **Fotos/Anexos podem ser selecionados antes de salvar** a O.S.: ficam em memória (`NovoArquivoDto`) e só são criptografados e persistidos em disco no momento do primeiro `Salvar`.
+- **Tema Light/Dark** com toggle na barra superior, persistido em `preferences.json` (fora do banco — lido antes de a chave mestra existir).
+- Backup automático/manual, restaurar, exportar PDF/Excel, imprimir, tags, favoritos e timeline (V1) permanecem ativos e agora operam sobre os novos campos.
+
+Testes: 36/36 passando (13 unitários + 23 integração), incluindo round-trip de banco criptografado, AES-256-GCM, exportação PDF/Excel e o fluxo completo de criação/edição de O.S.

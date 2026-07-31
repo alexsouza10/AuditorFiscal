@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace AuditorFiscal.UI.Views;
 
-public partial class AgendaView : UserControl
+public partial class GanttView : UserControl
 {
-    public AgendaView()
+    public GanttView()
     {
         InitializeComponent();
     }

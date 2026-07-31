@@ -47,6 +47,38 @@ namespace AuditorFiscal.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "OrdensServico",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Numero = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Empresa = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Cnpj = table.Column<string>(type: "TEXT", maxLength: 14, nullable: false),
+                    Endereco = table.Column<string>(type: "TEXT", maxLength: 300, nullable: false),
+                    Cidade = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
+                    Responsavel = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
+                    Situacao = table.Column<string>(type: "TEXT", maxLength: 30, nullable: false),
+                    Fiscalizacao = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    RecebimentoSfit = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    AberturaSfit = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    PrazoNad = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    PrazoNco = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    ElaboracaoAutos = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    DataFinal = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    Observacoes = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
+                    Latitude = table.Column<double>(type: "REAL", nullable: true),
+                    Longitude = table.Column<double>(type: "REAL", nullable: true),
+                    Favorito = table.Column<bool>(type: "INTEGER", nullable: false),
+                    HashIntegridade = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    AtualizadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrdensServico", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
                 {
@@ -74,40 +106,6 @@ namespace AuditorFiscal.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TiposAuditoria", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrdensServico",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Numero = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Empresa = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Cnpj = table.Column<string>(type: "TEXT", maxLength: 14, nullable: false),
-                    Endereco = table.Column<string>(type: "TEXT", maxLength: 300, nullable: false),
-                    Cidade = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    Responsavel = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    Data = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    Hora = table.Column<TimeOnly>(type: "TEXT", nullable: false),
-                    Situacao = table.Column<string>(type: "TEXT", maxLength: 30, nullable: false),
-                    TipoAuditoriaId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Observacoes = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
-                    Latitude = table.Column<double>(type: "REAL", nullable: true),
-                    Longitude = table.Column<double>(type: "REAL", nullable: true),
-                    Favorito = table.Column<bool>(type: "INTEGER", nullable: false),
-                    HashIntegridade = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    AtualizadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrdensServico", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrdensServico_TiposAuditoria_TipoAuditoriaId",
-                        column: x => x.TipoAuditoriaId,
-                        principalTable: "TiposAuditoria",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -162,6 +160,28 @@ namespace AuditorFiscal.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TimelineEventos",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    OrdemServicoId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    OcorridoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    Descricao = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    AtualizadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TimelineEventos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TimelineEventos_OrdensServico_OrdemServicoId",
+                        column: x => x.OrdemServicoId,
+                        principalTable: "OrdensServico",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OrdemServicoTags",
                 columns: table => new
                 {
@@ -181,28 +201,6 @@ namespace AuditorFiscal.Persistence.Migrations
                         name: "FK_OrdemServicoTags_Tags_TagsId",
                         column: x => x.TagsId,
                         principalTable: "Tags",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TimelineEventos",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    OrdemServicoId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    OcorridoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    Descricao = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    CriadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    AtualizadoEm = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TimelineEventos", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TimelineEventos_OrdensServico_OrdemServicoId",
-                        column: x => x.OrdemServicoId,
-                        principalTable: "OrdensServico",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -241,9 +239,9 @@ namespace AuditorFiscal.Persistence.Migrations
                 column: "TagsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrdensServico_Data",
+                name: "IX_OrdensServico_DataFinal",
                 table: "OrdensServico",
-                column: "Data");
+                column: "DataFinal");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrdensServico_Empresa",
@@ -256,9 +254,9 @@ namespace AuditorFiscal.Persistence.Migrations
                 column: "Numero");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrdensServico_TipoAuditoriaId",
+                name: "IX_OrdensServico_RecebimentoSfit",
                 table: "OrdensServico",
-                column: "TipoAuditoriaId");
+                column: "RecebimentoSfit");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tags_Nome",
@@ -294,13 +292,13 @@ namespace AuditorFiscal.Persistence.Migrations
                 name: "TimelineEventos");
 
             migrationBuilder.DropTable(
+                name: "TiposAuditoria");
+
+            migrationBuilder.DropTable(
                 name: "Tags");
 
             migrationBuilder.DropTable(
                 name: "OrdensServico");
-
-            migrationBuilder.DropTable(
-                name: "TiposAuditoria");
         }
     }
 }

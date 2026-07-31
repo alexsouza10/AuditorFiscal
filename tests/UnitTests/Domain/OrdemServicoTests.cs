@@ -14,17 +14,24 @@ public class OrdemServicoTests
         endereco: "Rua Exemplo, 123",
         cidade: "São Paulo",
         responsavel: "João da Silva",
-        data: new DateOnly(2026, 8, 1),
-        hora: new TimeOnly(9, 0),
-        tipoAuditoriaId: Guid.NewGuid(),
+        fiscalizacao: TipoFiscalizacao.Direta,
+        recebimentoSfit: new DateOnly(2026, 8, 1),
+        aberturaSfit: new DateOnly(2026, 8, 3),
+        dataFiscalizacao: new DateOnly(2026, 8, 8),
+        prazoNad: new DateOnly(2026, 8, 15),
+        prazoNco: new DateOnly(2026, 8, 30),
+        elaboracaoAutos: new DateOnly(2026, 9, 10),
+        dataFinal: new DateOnly(2026, 9, 20),
         momento: DateTimeOffset.UtcNow);
 
     [Fact]
-    public void Criar_DeveIniciarComoAgendadaEComEventoNaTimeline()
+    public void Criar_DeveIniciarComoEmAndamentoEComEventoNaTimeline()
     {
         var ordemServico = CriarOrdemServico();
 
-        ordemServico.Situacao.Should().Be(SituacaoOS.Agendada);
+        // Ao chegar com data de recebimento no SFIT já preenchida, a O.S. nasce em
+        // andamento — diferente do V1, em que "Agendada" fazia sentido sem uma data ainda.
+        ordemServico.Situacao.Should().Be(SituacaoOS.EmAndamento);
         ordemServico.Timeline.Should().ContainSingle();
         ordemServico.Favorito.Should().BeFalse();
     }
@@ -34,9 +41,9 @@ public class OrdemServicoTests
     {
         var ordemServico = CriarOrdemServico();
 
-        ordemServico.AlterarSituacao(SituacaoOS.EmAndamento, DateTimeOffset.UtcNow);
+        ordemServico.AlterarSituacao(SituacaoOS.Concluida, DateTimeOffset.UtcNow);
 
-        ordemServico.Situacao.Should().Be(SituacaoOS.EmAndamento);
+        ordemServico.Situacao.Should().Be(SituacaoOS.Concluida);
         ordemServico.Timeline.Should().HaveCount(2);
     }
 
@@ -45,7 +52,7 @@ public class OrdemServicoTests
     {
         var ordemServico = CriarOrdemServico();
 
-        ordemServico.AlterarSituacao(SituacaoOS.Agendada, DateTimeOffset.UtcNow);
+        ordemServico.AlterarSituacao(SituacaoOS.EmAndamento, DateTimeOffset.UtcNow);
 
         ordemServico.Timeline.Should().ContainSingle();
     }

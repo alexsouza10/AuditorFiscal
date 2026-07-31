@@ -5,10 +5,12 @@ using AuditorFiscal.Application.OrdensServico;
 using AuditorFiscal.Application.OrdensServico.Dtos;
 using AuditorFiscal.Domain.Entities;
 using AuditorFiscal.Domain.Enums;
+using AuditorFiscal.UI.Messaging;
 using AuditorFiscal.UI.Services;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AuditorFiscal.UI.ViewModels;
 
@@ -36,23 +38,35 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string _endereco = string.Empty;
     [ObservableProperty] private string _cidade = string.Empty;
     [ObservableProperty] private string _responsavel = string.Empty;
-    [ObservableProperty] private DateTimeOffset? _data = DateTimeOffset.Now;
-    [ObservableProperty] private TimeSpan? _hora = new(9, 0, 0);
+    [ObservableProperty] private TipoFiscalizacao _fiscalizacaoSelecionada = TipoFiscalizacao.Direta;
+
+    // As etapas do fluxo SFIT (CLAUDE V2), na ordem em que a auditoria progride. Ficam em
+    // branco por padrão — o auditor deve digitar ou escolher cada data conscientemente,
+    // em vez de herdar um valor pré-preenchido que poderia passar despercebido.
+    [ObservableProperty] private DateTime? _recebimentoSfit;
+    [ObservableProperty] private DateTime? _aberturaSfit;
+    [ObservableProperty] private DateTime? _dataFiscalizacao;
+    [ObservableProperty] private DateTime? _prazoNad;
+    [ObservableProperty] private DateTime? _prazoNco;
+    [ObservableProperty] private DateTime? _elaboracaoAutos;
+    [ObservableProperty] private DateTime? _dataFinal;
+
     [ObservableProperty] private string? _observacoes;
     [ObservableProperty] private string? _latitudeTexto;
     [ObservableProperty] private string? _longitudeTexto;
-    [ObservableProperty] private TipoAuditoria? _tipoAuditoriaSelecionado;
-    [ObservableProperty] private SituacaoOS _situacaoSelecionada = SituacaoOS.Agendada;
+    [ObservableProperty] private SituacaoOS _situacaoSelecionada = SituacaoOS.EmAndamento;
     [ObservableProperty] private bool _favorito;
+    [ObservableProperty] private bool _temNcre;
+    [ObservableProperty] private DateTime? _prazoNcre;
     [ObservableProperty] private string? _mensagemErro;
     [ObservableProperty] private string? _mensagemStatus;
+    [ObservableProperty] private int _abaSelecionada;
 
-    public ObservableCollection<TipoAuditoria> TiposAuditoria { get; } = [];
     public ObservableCollection<ArquivoItemViewModel> Fotos { get; } = [];
     public ObservableCollection<ArquivoItemViewModel> Anexos { get; } = [];
-    public ObservableCollection<TagSelecionavelViewModel> Tags { get; } = [];
     public ObservableCollection<TimelineEvento> Timeline { get; } = [];
     public IReadOnlyList<SituacaoOS> SituacoesDisponiveis { get; } = Enum.GetValues<SituacaoOS>();
+    public IReadOnlyList<TipoFiscalizacao> TiposFiscalizacaoDisponiveis { get; } = Enum.GetValues<TipoFiscalizacao>();
 
     public OrdemServicoFormViewModel(
         OrdemServicoService ordemServicoService,
@@ -80,11 +94,13 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
 
     public string TituloPagina => IsNovo ? "Nova Ordem de Serviço" : $"Ordem de Serviço {Numero}";
     public bool PodeExportar => !IsNovo;
+    public string FavoritoTexto => Favorito ? "★ Favorito" : "☆ Favorito";
+
+    partial void OnFavoritoChanged(bool value) => OnPropertyChanged(nameof(FavoritoTexto));
 
     public void DefinirAgendamentoInicial(DateOnly data, TimeOnly hora)
     {
-        Data = data.ToDateTime(TimeOnly.MinValue);
-        Hora = hora.ToTimeSpan();
+        RecebimentoSfit = data.ToDateTime(hora);
     }
 
     public async Task CarregarParaEdicaoAsync(Guid ordemServicoId)
@@ -104,24 +120,27 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             Endereco = ordemServico.Endereco;
             Cidade = ordemServico.Cidade;
             Responsavel = ordemServico.Responsavel;
-            Data = ordemServico.Data.ToDateTime(TimeOnly.MinValue);
-            Hora = ordemServico.Hora.ToTimeSpan();
+            FiscalizacaoSelecionada = ordemServico.Fiscalizacao;
+            RecebimentoSfit = ordemServico.RecebimentoSfit.ToDateTime(TimeOnly.MinValue);
+            AberturaSfit = ordemServico.AberturaSfit.ToDateTime(TimeOnly.MinValue);
+            DataFiscalizacao = ordemServico.DataFiscalizacao.ToDateTime(TimeOnly.MinValue);
+            PrazoNad = ordemServico.PrazoNad.ToDateTime(TimeOnly.MinValue);
+            PrazoNco = ordemServico.PrazoNco.ToDateTime(TimeOnly.MinValue);
+            ElaboracaoAutos = ordemServico.ElaboracaoAutos.ToDateTime(TimeOnly.MinValue);
+            DataFinal = ordemServico.DataFinal.ToDateTime(TimeOnly.MinValue);
             Observacoes = ordemServico.Observacoes;
             LatitudeTexto = ordemServico.Coordenada?.Latitude.ToString("F6", CultureInfo.InvariantCulture);
             LongitudeTexto = ordemServico.Coordenada?.Longitude.ToString("F6", CultureInfo.InvariantCulture);
             SituacaoSelecionada = ordemServico.Situacao;
             Favorito = ordemServico.Favorito;
-
-            await CarregarTiposAuditoriaAsync();
-            TipoAuditoriaSelecionado = TiposAuditoria.FirstOrDefault(t => t.Id == ordemServico.TipoAuditoriaId);
+            TemNcre = ordemServico.TemNcre;
+            PrazoNcre = ordemServico.PrazoNcre?.ToDateTime(TimeOnly.MinValue);
 
             AtualizarListasArquivos(ordemServico);
 
             Timeline.Clear();
             foreach (var evento in ordemServico.Timeline.OrderByDescending(t => t.OcorridoEm))
                 Timeline.Add(evento);
-
-            await CarregarTagsAsync(ordemServico.Tags.Select(t => t.Id).ToHashSet());
         }
         finally
         {
@@ -136,6 +155,12 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     {
         MensagemErro = null;
 
+        if (!DatasObrigatoriasPreenchidas())
+        {
+            MensagemErro = "Preencha todas as datas do fluxo SFIT antes de salvar.";
+            return;
+        }
+
         if (!TryConverterCoordenadas(out var latitude, out var longitude))
         {
             MensagemErro = "Latitude/Longitude inválidas.";
@@ -147,11 +172,10 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         if (IsNovo)
         {
             var dto = new CriarOrdemServicoDto(
-                Numero, Empresa, Cnpj, Endereco, Cidade, Responsavel,
-                DateOnly.FromDateTime((Data ?? DateTimeOffset.Now).Date),
-                TimeOnly.FromTimeSpan(Hora ?? TimeSpan.Zero),
-                TipoAuditoriaSelecionado?.Id ?? Guid.Empty,
-                Observacoes, latitude, longitude);
+                Numero, Empresa, Cnpj, Endereco, Cidade, Responsavel, FiscalizacaoSelecionada,
+                ParaData(RecebimentoSfit), ParaData(AberturaSfit), ParaData(DataFiscalizacao), ParaData(PrazoNad),
+                ParaData(PrazoNco), ParaData(ElaboracaoAutos), ParaData(DataFinal),
+                Observacoes, latitude, longitude, TemNcre, TemNcre ? ParaData(PrazoNcre) : null);
 
             var resultado = await _ordemServicoService.CriarAsync(dto, arquivos);
             if (!resultado.IsSuccess)
@@ -164,17 +188,16 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             _arquivosPendentes.Clear();
             IsNovo = false;
 
-            if (SituacaoSelecionada != SituacaoOS.Agendada)
+            if (SituacaoSelecionada != SituacaoOS.EmAndamento)
                 await _ordemServicoService.AlterarSituacaoAsync(_ordemServicoId, SituacaoSelecionada);
         }
         else
         {
             var dto = new AtualizarOrdemServicoDto(
-                _ordemServicoId, Empresa, Cnpj, Endereco, Cidade, Responsavel,
-                DateOnly.FromDateTime((Data ?? DateTimeOffset.Now).Date),
-                TimeOnly.FromTimeSpan(Hora ?? TimeSpan.Zero),
-                TipoAuditoriaSelecionado?.Id ?? Guid.Empty,
-                Observacoes, latitude, longitude);
+                _ordemServicoId, Empresa, Cnpj, Endereco, Cidade, Responsavel, FiscalizacaoSelecionada,
+                ParaData(RecebimentoSfit), ParaData(AberturaSfit), ParaData(DataFiscalizacao), ParaData(PrazoNad),
+                ParaData(PrazoNco), ParaData(ElaboracaoAutos), ParaData(DataFinal),
+                Observacoes, latitude, longitude, TemNcre, TemNcre ? ParaData(PrazoNcre) : null);
 
             var resultado = await _ordemServicoService.AtualizarAsync(dto, arquivos);
             if (!resultado.IsSuccess)
@@ -187,12 +210,10 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             await _ordemServicoService.AlterarSituacaoAsync(_ordemServicoId, SituacaoSelecionada);
         }
 
-        await _ordemServicoService.DefinirTagsAsync(
-            _ordemServicoId, Tags.Where(t => t.Selecionada).Select(t => t.Id).ToList());
-
         _sujo = false;
         MensagemStatus = $"Salvo às {DateTime.Now:HH:mm:ss}";
         await CarregarParaEdicaoAsync(_ordemServicoId);
+        WeakReferenceMessenger.Default.Send(new OrdemServicoAlteradaMessage());
     }
 
     [RelayCommand]
@@ -234,7 +255,10 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         Favorito = !Favorito;
 
         if (!IsNovo)
+        {
             await _ordemServicoService.AlternarFavoritoAsync(_ordemServicoId);
+            WeakReferenceMessenger.Default.Send(new OrdemServicoAlteradaMessage());
+        }
     }
 
     [RelayCommand]
@@ -251,6 +275,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             return;
 
         await _ordemServicoService.ExcluirAsync(_ordemServicoId);
+        WeakReferenceMessenger.Default.Send(new OrdemServicoAlteradaMessage());
         _navigation.Voltar();
     }
 
@@ -317,9 +342,6 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         _carregando = true;
         try
         {
-            await CarregarTiposAuditoriaAsync();
-            await CarregarTagsAsync(new HashSet<Guid>());
-
             if (IsNovo && string.IsNullOrWhiteSpace(Numero))
                 Numero = await _ordemServicoService.SugerirProximoNumeroAsync();
         }
@@ -329,24 +351,6 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             _sujo = false;
             NotificarCabecalho();
         }
-    }
-
-    private async Task CarregarTiposAuditoriaAsync()
-    {
-        var tipos = await _ordemServicoService.ListarTiposAuditoriaAtivosAsync();
-        TiposAuditoria.Clear();
-        foreach (var tipo in tipos)
-            TiposAuditoria.Add(tipo);
-
-        TipoAuditoriaSelecionado ??= TiposAuditoria.FirstOrDefault();
-    }
-
-    private async Task CarregarTagsAsync(IReadOnlySet<Guid> selecionadas)
-    {
-        var tags = await _ordemServicoService.ListarTagsAsync();
-        Tags.Clear();
-        foreach (var tag in tags)
-            Tags.Add(new TagSelecionavelViewModel(tag.Id, tag.Nome, tag.Cor, selecionadas.Contains(tag.Id)));
     }
 
     private async Task SalvarAutomaticamenteAsync()
@@ -364,6 +368,18 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             _salvando = false;
         }
     }
+
+    private bool DatasObrigatoriasPreenchidas()
+    {
+        if (RecebimentoSfit is null || AberturaSfit is null || DataFiscalizacao is null ||
+            PrazoNad is null || PrazoNco is null || ElaboracaoAutos is null || DataFinal is null)
+            return false;
+
+        return !TemNcre || PrazoNcre is not null;
+    }
+
+    private static DateOnly ParaData(DateTime? valor) =>
+        DateOnly.FromDateTime((valor ?? DateTime.Now).Date);
 
     private bool TryConverterCoordenadas(out double? latitude, out double? longitude)
     {
@@ -398,7 +414,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         base.OnPropertyChanged(e);
 
         if (_carregando || e.PropertyName is nameof(MensagemErro) or nameof(MensagemStatus)
-            or nameof(TituloPagina) or nameof(PodeExportar))
+            or nameof(TituloPagina) or nameof(PodeExportar) or nameof(FavoritoTexto) or nameof(AbaSelecionada))
             return;
 
         if (e.PropertyName is nameof(IsNovo) or nameof(Numero))

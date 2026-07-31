@@ -103,20 +103,22 @@ public class OrdemServicoFluxoTests : IDisposable
     }
 
     [Fact]
-    public async Task Reagendar_DeveAtualizarDataEHora()
+    public async Task Adiar_DeveDeslocarTodoOCronograma()
     {
         await using var contexto = CriarContexto();
         await contexto.Database.MigrateAsync();
         var servico = CriarServico(contexto);
 
         var criada = await servico.CriarAsync(NovaOrdemDto("OS-2026-9004"));
-        var novaData = new DateOnly(2026, 9, 15);
+        var original = await servico.ObterDetalheAsync(criada.Value);
+        var recebimentoOriginal = original!.RecebimentoSfit;
+        var dataFinalOriginal = original.DataFinal;
 
-        await servico.ReagendarAsync(criada.Value, novaData, new TimeOnly(14, 30));
+        await servico.AdiarAsync(criada.Value, 7);
 
         var ordemServico = await servico.ObterDetalheAsync(criada.Value);
-        ordemServico!.Data.Should().Be(novaData);
-        ordemServico.Hora.Should().Be(new TimeOnly(14, 30));
+        ordemServico!.RecebimentoSfit.Should().Be(recebimentoOriginal.AddDays(7));
+        ordemServico.DataFinal.Should().Be(dataFinalOriginal.AddDays(7));
     }
 
     [Fact]
@@ -141,14 +143,14 @@ public class OrdemServicoFluxoTests : IDisposable
     }
 
     [Fact]
-    public async Task SugerirProximoNumero_DeveContinuarSequenciaDoAno()
+    public async Task SugerirProximoNumero_DeveSeguirPadraoOitoDigitosMaisVerificador()
     {
         await using var contexto = CriarContexto();
         await contexto.Database.MigrateAsync();
         var servico = CriarServico(contexto);
 
         var primeiro = await servico.SugerirProximoNumeroAsync();
-        primeiro.Should().StartWith($"OS-{DateTime.Today.Year}-");
+        primeiro.Should().MatchRegex(@"^\d{8}-\d$");
 
         await servico.CriarAsync(NovaOrdemDto(primeiro));
         var segundo = await servico.SugerirProximoNumeroAsync();
@@ -169,14 +171,16 @@ public class OrdemServicoFluxoTests : IDisposable
         var porTermo = await servico.BuscarAsync(new FiltroOrdemServicoDto { Termo = "Padaria" });
         porTermo.Should().ContainSingle();
 
-        var porSituacao = await servico.BuscarAsync(new FiltroOrdemServicoDto { Situacao = SituacaoOS.Agendada });
+        var porSituacao = await servico.BuscarAsync(new FiltroOrdemServicoDto { Situacao = SituacaoOS.EmAndamento });
         porSituacao.Should().HaveCount(2);
     }
 
     private static CriarOrdemServicoDto NovaOrdemDto(string numero) => new(
         numero, "Empresa Teste Ltda", "11.444.777/0001-61", "Rua Exemplo, 123", "São Paulo",
-        "João da Silva", new DateOnly(2026, 8, 10), new TimeOnly(9, 0),
-        TipoAuditoriaSeed.AuditoriaFiscal, null, null, null);
+        "João da Silva", TipoFiscalizacao.Direta,
+        new DateOnly(2026, 8, 10), new DateOnly(2026, 8, 12), new DateOnly(2026, 8, 18), new DateOnly(2026, 8, 25),
+        new DateOnly(2026, 9, 5), new DateOnly(2026, 9, 15), new DateOnly(2026, 9, 25),
+        null, null, null);
 
     private OrdemServicoService CriarServico(AuditorFiscalDbContext contexto) => new(
         new UnitOfWork(contexto),

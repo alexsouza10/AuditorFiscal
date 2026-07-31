@@ -14,8 +14,9 @@ public class ExcelExportService : IExcelExportService
 
         string[] cabecalhos =
         [
-            "Número", "Empresa", "CNPJ", "Endereço", "Cidade", "Responsável",
-            "Data", "Hora", "Situação", "Tipo de Auditoria", "Favorito", "Tags",
+            "Número", "Descrição / Cliente", "CNPJ", "Endereço", "Cidade", "Responsável",
+            "Fiscalização", "Recebimento SFIT", "Abertura SFIT", "Data Fiscalização", "Prazo NAD", "Prazo NCO",
+            "Elaboração Autos", "Data Final", "Situação", "Favorito",
             "Fotos", "Anexos", "Latitude", "Longitude", "Observações"
         ];
 
@@ -28,7 +29,7 @@ public class ExcelExportService : IExcelExportService
         }
 
         var linha = 2;
-        foreach (var os in ordensServico.OrderBy(o => o.Data).ThenBy(o => o.Hora))
+        foreach (var os in ordensServico.OrderBy(o => o.RecebimentoSfit))
         {
             aba.Cell(linha, 1).Value = os.Numero;
             aba.Cell(linha, 2).Value = os.Empresa;
@@ -36,18 +37,30 @@ public class ExcelExportService : IExcelExportService
             aba.Cell(linha, 4).Value = os.Endereco;
             aba.Cell(linha, 5).Value = os.Cidade;
             aba.Cell(linha, 6).Value = os.Responsavel;
-            aba.Cell(linha, 7).Value = os.Data.ToDateTime(TimeOnly.MinValue);
-            aba.Cell(linha, 7).Style.DateFormat.Format = "dd/MM/yyyy";
-            aba.Cell(linha, 8).Value = os.Hora.ToString("HH\\:mm");
-            aba.Cell(linha, 9).Value = os.Situacao.Descricao();
-            aba.Cell(linha, 10).Value = os.TipoAuditoria?.Nome ?? string.Empty;
-            aba.Cell(linha, 11).Value = os.Favorito ? "Sim" : "Não";
-            aba.Cell(linha, 12).Value = string.Join(", ", os.Tags.Select(t => t.Nome));
-            aba.Cell(linha, 13).Value = os.Fotos.Count;
-            aba.Cell(linha, 14).Value = os.Anexos.Count;
-            aba.Cell(linha, 15).Value = os.Coordenada?.Latitude;
-            aba.Cell(linha, 16).Value = os.Coordenada?.Longitude;
-            aba.Cell(linha, 17).Value = os.Observacoes ?? string.Empty;
+            aba.Cell(linha, 7).Value = os.Fiscalizacao.Descricao();
+
+            aba.Cell(linha, 8).Value = os.RecebimentoSfit.ToDateTime(TimeOnly.MinValue);
+            aba.Cell(linha, 8).Style.DateFormat.Format = "dd/MM/yyyy";
+            aba.Cell(linha, 9).Value = os.AberturaSfit.ToDateTime(TimeOnly.MinValue);
+            aba.Cell(linha, 9).Style.DateFormat.Format = "dd/MM/yyyy";
+            aba.Cell(linha, 10).Value = os.DataFiscalizacao.ToDateTime(TimeOnly.MinValue);
+            aba.Cell(linha, 10).Style.DateFormat.Format = "dd/MM/yyyy";
+            aba.Cell(linha, 11).Value = os.PrazoNad.ToDateTime(TimeOnly.MinValue);
+            aba.Cell(linha, 11).Style.DateFormat.Format = "dd/MM/yyyy";
+            aba.Cell(linha, 12).Value = os.PrazoNco.ToDateTime(TimeOnly.MinValue);
+            aba.Cell(linha, 12).Style.DateFormat.Format = "dd/MM/yyyy";
+            aba.Cell(linha, 13).Value = os.ElaboracaoAutos.ToDateTime(TimeOnly.MinValue);
+            aba.Cell(linha, 13).Style.DateFormat.Format = "dd/MM/yyyy";
+            aba.Cell(linha, 14).Value = os.DataFinal.ToDateTime(TimeOnly.MinValue);
+            aba.Cell(linha, 14).Style.DateFormat.Format = "dd/MM/yyyy";
+
+            aba.Cell(linha, 15).Value = os.Situacao.Descricao();
+            aba.Cell(linha, 16).Value = os.Favorito ? "Sim" : "Não";
+            aba.Cell(linha, 17).Value = os.Fotos.Count;
+            aba.Cell(linha, 18).Value = os.Anexos.Count;
+            aba.Cell(linha, 19).Value = os.Coordenada?.Latitude;
+            aba.Cell(linha, 20).Value = os.Coordenada?.Longitude;
+            aba.Cell(linha, 21).Value = os.Observacoes ?? string.Empty;
             linha++;
         }
 

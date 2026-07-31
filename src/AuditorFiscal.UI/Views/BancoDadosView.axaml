@@ -3,6 +3,7 @@
              xmlns:vm="using:AuditorFiscal.UI.ViewModels"
              xmlns:entities="using:AuditorFiscal.Domain.Entities"
              xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:local="using:AuditorFiscal.UI.Converters"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
@@ -11,14 +12,16 @@
 
     <UserControl.Resources>
         <ResourceDictionary>
+            <local:SituacaoParaDescricaoConverter x:Key="SituacaoParaDescricao" />
+
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="CartaoBrush" Color="#F8FAFC" />
                     <SolidColorBrush x:Key="BordaBrush" Color="#E2E8F0" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="CartaoBrush" Color="#131316" />
-                    <SolidColorBrush x:Key="BordaBrush" Color="#27272A" />
+                    <SolidColorBrush x:Key="CartaoBrush" Color="#232326" />
+                    <SolidColorBrush x:Key="BordaBrush" Color="#3F3F46" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -54,7 +57,13 @@
                     <StackPanel Spacing="4">
                         <TextBlock Text="Situação" FontSize="11" Opacity="0.6" />
                         <ComboBox ItemsSource="{Binding SituacoesFiltro}" SelectedItem="{Binding SituacaoFiltro}"
-                                  HorizontalAlignment="Stretch" PlaceholderText="Todas" />
+                                  HorizontalAlignment="Stretch" PlaceholderText="Todas">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource SituacaoParaDescricao}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
 
                     <StackPanel Spacing="4">
@@ -63,78 +72,8 @@
                                   HorizontalAlignment="Stretch" PlaceholderText="Todas" />
                     </StackPanel>
 
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="Tag" FontSize="11" Opacity="0.6" />
-                        <ComboBox ItemsSource="{Binding Tags}" SelectedItem="{Binding TagFiltro}"
-                                  HorizontalAlignment="Stretch" PlaceholderText="Todas">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="vm:TagSelecionavelViewModel">
-                                    <TextBlock Text="{Binding Nome}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-
                     <CheckBox Content="Somente favoritos" IsChecked="{Binding SomenteFavoritos}" />
                     <Button Content="Limpar filtros" Command="{Binding LimparFiltrosCommand}" HorizontalAlignment="Stretch" />
-
-                    <Separator />
-
-                    <TextBlock Text="Dashboard" FontWeight="SemiBold" />
-                    <UniformGrid Columns="2" Margin="0,0,0,4">
-                        <StackPanel Margin="0,0,6,6">
-                            <TextBlock Text="{Binding Total}" FontSize="20" FontWeight="Bold" />
-                            <TextBlock Text="Total" FontSize="11" Opacity="0.6" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,0,6">
-                            <TextBlock Text="{Binding TotalAgendadas}" FontSize="20" FontWeight="Bold" Foreground="#3B82F6" />
-                            <TextBlock Text="Agendadas" FontSize="11" Opacity="0.6" />
-                        </StackPanel>
-                        <StackPanel Margin="0,0,6,0">
-                            <TextBlock Text="{Binding TotalConcluidas}" FontSize="20" FontWeight="Bold" Foreground="#22C55E" />
-                            <TextBlock Text="Concluídas" FontSize="11" Opacity="0.6" />
-                        </StackPanel>
-                        <StackPanel>
-                            <TextBlock Text="{Binding TotalFavoritas}" FontSize="20" FontWeight="Bold" Foreground="#F59E0B" />
-                            <TextBlock Text="Favoritas" FontSize="11" Opacity="0.6" />
-                        </StackPanel>
-                    </UniformGrid>
-
-                    <TextBlock Text="Por situação" FontSize="11" Opacity="0.6" Margin="0,4,0,0" />
-                    <ItemsControl ItemsSource="{Binding DistribuicaoSituacao}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:BarraDashboardViewModel">
-                                <Grid ColumnDefinitions="*,Auto" Margin="0,2">
-                                    <StackPanel Grid.Column="0" Spacing="2">
-                                        <TextBlock Text="{Binding Rotulo}" FontSize="11" />
-                                        <Rectangle Height="8" RadiusX="4" RadiusY="4"
-                                                   Width="{Binding Largura}" Fill="{Binding Cor}"
-                                                   HorizontalAlignment="Left" />
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="1" Text="{Binding Quantidade}" FontSize="11"
-                                               VerticalAlignment="Bottom" Margin="6,0,0,0" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <TextBlock Text="Por tipo de auditoria" FontSize="11" Opacity="0.6" Margin="0,6,0,0" />
-                    <ItemsControl ItemsSource="{Binding DistribuicaoTipo}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:BarraDashboardViewModel">
-                                <Grid ColumnDefinitions="*,Auto" Margin="0,2">
-                                    <StackPanel Grid.Column="0" Spacing="2">
-                                        <TextBlock Text="{Binding Rotulo}" FontSize="11" TextTrimming="CharacterEllipsis" />
-                                        <Rectangle Height="8" RadiusX="4" RadiusY="4"
-                                                   Width="{Binding Largura}" Fill="{Binding Cor}"
-                                                   HorizontalAlignment="Left" />
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="1" Text="{Binding Quantidade}" FontSize="11"
-                                               VerticalAlignment="Bottom" Margin="6,0,0,0" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
 
@@ -148,9 +87,9 @@
                         <DataGridTextColumn Header="Número" Binding="{Binding Numero}" Width="120" />
                         <DataGridTextColumn Header="Empresa" Binding="{Binding Empresa}" Width="*" />
                         <DataGridTextColumn Header="Cidade" Binding="{Binding Cidade}" Width="130" />
-                        <DataGridTextColumn Header="Data" Binding="{Binding Data, StringFormat='{}{0:dd/MM/yyyy}'}" Width="100" />
-                        <DataGridTextColumn Header="Hora" Binding="{Binding Hora, StringFormat='{}{0:HH\\:mm}'}" Width="70" />
-                        <DataGridTextColumn Header="Situação" Binding="{Binding Situacao}" Width="110" />
+                        <DataGridTextColumn Header="Recebimento SFIT" Binding="{Binding RecebimentoSfit, StringFormat='{}{0:dd/MM/yyyy}'}" Width="130" />
+                        <DataGridTextColumn Header="Data Final" Binding="{Binding DataFinal, StringFormat='{}{0:dd/MM/yyyy}'}" Width="110" />
+                        <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Converter={StaticResource SituacaoParaDescricao}}" Width="110" />
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
@@ -181,6 +120,7 @@
                         <Separator Margin="0,4" />
 
                         <Button Content="Abrir / Editar" Classes="accent" HorizontalAlignment="Stretch" Command="{Binding AbrirCommand}" />
+                        <Button Content="Histórico desta O.S." HorizontalAlignment="Stretch" Command="{Binding AbrirHistoricoCommand}" />
                         <Button Content="Histórico da empresa" HorizontalAlignment="Stretch" Command="{Binding HistoricoDaEmpresaCommand}" />
                         <Button Content="Favoritar" HorizontalAlignment="Stretch" Command="{Binding AlternarFavoritoCommand}" />
                         <Button Content="Excluir" HorizontalAlignment="Stretch" Command="{Binding ExcluirCommand}" Foreground="#EF4444" />

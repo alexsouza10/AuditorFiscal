@@ -11,6 +11,14 @@
     <NeutralLanguage>pt-BR</NeutralLanguage>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
+
+    <!-- Sobrescrito pelo Makefile (-p:Version=1.2.3) a partir da última tag do git.
+         Fora do publish oficial, fica só um marcador de build de desenvolvimento. -->
+    <Version Condition="'$(Version)' == ''">0.0.0-dev</Version>
+
+    <!-- Sem isso, o SDK gruda "+<hash do commit>" na InformationalVersion sempre que o
+         projeto está dentro de um repositório git — poluindo a versão exibida no app. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
 </Project>

@@ -8,12 +8,17 @@
              x:DataType="vm:HomeViewModel">
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="48,40">
-        <StackPanel Grid.Row="0" Spacing="4">
-            <TextBlock Text="Auditor Fiscal" FontSize="30" FontWeight="Bold" />
-            <TextBlock Text="{Binding Resumo}" Opacity="0.65" />
+        <StackPanel Grid.Row="0" Spacing="2">
+            <TextBlock Text="Bem vindo" FontSize="30" FontWeight="Bold" />
+            <TextBlock Text="Olá! Vamos ao trabalho" FontSize="16" FontWeight="SemiBold" Opacity="0.8" />
+            <Button Classes="linkNotificacao" Command="{Binding VerAuditoriasHojeCommand}"
+                    HorizontalAlignment="Left" Padding="0" Margin="0,6,0,0"
+                    ToolTip.Tip="Ver as auditorias em andamento hoje" AutomationProperties.AutomationId="BtnVerHoje">
+                <TextBlock Text="{Binding Resumo}" Opacity="0.6" />
+            </Button>
         </StackPanel>
 
-        <UniformGrid Grid.Row="1" Columns="3" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <UniformGrid Grid.Row="1" Columns="4" VerticalAlignment="Center" HorizontalAlignment="Center">
             <Button Classes="card" Margin="12" Command="{Binding NovaOrdemServicoCommand}"
                     AutomationProperties.AutomationId="BtnNovaOrdemServico"
                     AutomationProperties.Name="Nova Ordem de Serviço">
@@ -25,12 +30,12 @@
                 </StackPanel>
             </Button>
 
-            <Button Classes="card" Margin="12" Command="{Binding AgendaCommand}"
+            <Button Classes="card" Margin="12" Command="{Binding VisualizarCommand}"
                     AutomationProperties.AutomationId="BtnAgenda"
-                    AutomationProperties.Name="Agenda">
+                    AutomationProperties.Name="Visualizar">
                 <StackPanel HorizontalAlignment="Center" Spacing="12">
-                    <TextBlock Text="📅" FontSize="44" HorizontalAlignment="Center" />
-                    <TextBlock Text="Agenda" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Text="📊" FontSize="44" HorizontalAlignment="Center" />
+                    <TextBlock Text="Visualizar (Gantt)" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
                     <TextBlock Text="Ctrl+G" FontSize="11" Opacity="0.5" HorizontalAlignment="Center" />
                 </StackPanel>
             </Button>
@@ -42,6 +47,16 @@
                     <TextBlock Text="🗄" FontSize="44" HorizontalAlignment="Center" />
                     <TextBlock Text="Banco de Dados" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
                     <TextBlock Text="Ctrl+B" FontSize="11" Opacity="0.5" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <Button Classes="card" Margin="12" Command="{Binding DashboardCommand}"
+                    AutomationProperties.AutomationId="BtnDashboard"
+                    AutomationProperties.Name="Dashboard">
+                <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <TextBlock Text="📈" FontSize="44" HorizontalAlignment="Center" />
+                    <TextBlock Text="Dashboard" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Text="Ctrl+K" FontSize="11" Opacity="0.5" HorizontalAlignment="Center" />
                 </StackPanel>
             </Button>
         </UniformGrid>
@@ -61,6 +76,9 @@
                 <TextBlock Text="Em aberto" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
             </StackPanel>
         </StackPanel>
+
+        <TextBlock Grid.Row="2" Text="{Binding VersaoTexto}" FontSize="11" Opacity="0.4"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom" />
     </Grid>
 
 </UserControl>

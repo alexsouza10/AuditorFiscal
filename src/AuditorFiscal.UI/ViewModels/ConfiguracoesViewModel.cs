@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using AuditorFiscal.Application.Interfaces.Services;
+using AuditorFiscal.Shared;
 using AuditorFiscal.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,9 +24,11 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private bool _iniciarComWindows;
     [ObservableProperty] private bool _backupAutomatico;
     [ObservableProperty] private string? _mensagemStatus;
+    [ObservableProperty] private bool _processandoBackup;
 
     public ObservableCollection<string> BackupsDisponiveis { get; } = [];
     public IReadOnlyList<TemaAplicacao> TemasDisponiveis { get; } = Enum.GetValues<TemaAplicacao>();
+    public string CaminhoPastaBackups => AppPaths.Backups;
 
     public ConfiguracoesViewModel(
         IPreferencesService preferencias,
@@ -86,6 +90,8 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [RelayCommand]
     private async Task CriarBackupAsync()
     {
+        ProcessandoBackup = true;
+        MensagemStatus = "Criando backup, aguarde...";
         try
         {
             var registro = await _backup.CriarBackupAsync(automatico: false);
@@ -97,6 +103,10 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         {
             MensagemStatus = $"Falha ao criar backup: {excecao.Message}";
         }
+        finally
+        {
+            ProcessandoBackup = false;
+        }
     }
 
     [RelayCommand]
@@ -107,21 +117,45 @@ public partial class ConfiguracoesViewModel : ViewModelBase
             return;
 
         if (!await _dialogs.ConfirmarAsync("Restaurar backup",
-                "Todos os dados atuais serão substituídos pelo conteúdo do backup. " +
-                "Um backup de segurança do estado atual será criado antes. Continuar?", "Restaurar"))
+                "Todos os dados atuais serão substituídos pelo conteúdo do backup. O aplicativo vai fechar e " +
+                "abrir sozinho para concluir — não é preciso fazer isso manualmente. Um backup de segurança " +
+                "do estado atual será criado antes. Continuar?", "Restaurar"))
             return;
 
+        ProcessandoBackup = true;
+        MensagemStatus = "Lendo e validando o backup, aguarde...";
         try
         {
             await _backup.RestaurarBackupAsync(caminho);
-            await _dialogs.InformarAsync("Backup restaurado",
-                "Os dados foram restaurados. Feche e abra o aplicativo para carregar as informações restauradas.");
-            MensagemStatus = "Backup restaurado. Reinicie o aplicativo.";
+            MensagemStatus = "Backup válido. Reiniciando o aplicativo para concluir a restauração...";
+            ReiniciarAplicativo();
         }
         catch (Exception excecao)
         {
-            MensagemStatus = $"Falha ao restaurar: {excecao.Message}";
+            MensagemStatus = $"Falha ao ler o backup: {excecao.Message}";
+            ProcessandoBackup = false;
         }
+    }
+
+    /// <summary>
+    /// Reinicia o app sozinho para aplicar a restauração: o banco atual fica aberto por
+    /// conexões que só se soltam quando o processo termina, então sobrescrevê-lo só é
+    /// seguro no início de um processo novo, antes de qualquer conexão existir.
+    /// </summary>
+    private static void ReiniciarAplicativo()
+    {
+        var executavel = Environment.ProcessPath;
+        if (!string.IsNullOrEmpty(executavel))
+            Process.Start(executavel);
+
+        Environment.Exit(0);
+    }
+
+    [RelayCommand]
+    private void AbrirPastaBackups()
+    {
+        Directory.CreateDirectory(AppPaths.Backups);
+        Process.Start(new ProcessStartInfo(AppPaths.Backups) { UseShellExecute = true });
     }
 
     [RelayCommand]
