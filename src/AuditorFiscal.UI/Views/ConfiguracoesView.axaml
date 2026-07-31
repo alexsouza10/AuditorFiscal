@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AuditorFiscal.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+             x:Class="AuditorFiscal.UI.Views.ConfiguracoesView"
+             x:DataType="vm:ConfiguracoesViewModel">
+
+    <DockPanel Margin="24">
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="12" Margin="0,0,0,20">
+            <Button Content="←" Command="{Binding VoltarCommand}" />
+            <TextBlock Text="Configurações" Classes="pageTitle" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding MensagemStatus}" Opacity="0.75" Margin="0,12,0,0" TextWrapping="Wrap" />
+
+        <ScrollViewer>
+            <StackPanel Spacing="20" MaxWidth="560" HorizontalAlignment="Left">
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Aparência" Classes="sectionTitle" />
+                    <TextBlock Text="Tema" Classes="fieldLabel" />
+                    <ComboBox ItemsSource="{Binding TemasDisponiveis}" SelectedItem="{Binding TemaSelecionado}"
+                              HorizontalAlignment="Stretch" AutomationProperties.AutomationId="CmbTema" />
+                    <TextBlock Text="&quot;Sistema&quot; acompanha o tema do Windows automaticamente."
+                               FontSize="11" Opacity="0.6" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Separator />
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Inicialização" Classes="sectionTitle" />
+                    <CheckBox Content="Iniciar automaticamente com o Windows"
+                              IsChecked="{Binding IniciarComWindows}"
+                              AutomationProperties.AutomationId="ChkAutoStart" />
+                    <TextBlock Text="Registra o aplicativo apenas para o seu usuário, sem exigir administrador."
+                               FontSize="11" Opacity="0.6" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Separator />
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Backup" Classes="sectionTitle" />
+                    <CheckBox Content="Backup automático ao abrir o aplicativo" IsChecked="{Binding BackupAutomatico}" />
+                    <TextBlock Text="Os backups incluem o banco de dados e todos os anexos, sempre criptografados com AES-256-GCM."
+                               FontSize="11" Opacity="0.6" TextWrapping="Wrap" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                        <Button Content="Criar backup agora" Classes="accent" Command="{Binding CriarBackupCommand}" />
+                        <Button Content="Restaurar backup…" Command="{Binding RestaurarBackupCommand}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Backups recentes" Classes="fieldLabel" />
+                    <ItemsControl ItemsSource="{Binding BackupsDisponiveis}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="12" Opacity="0.75" Margin="0,2" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <Separator />
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Atalhos de teclado" Classes="sectionTitle" />
+                    <TextBlock Text="Ctrl+N — Nova ordem de serviço" FontSize="12" Opacity="0.75" />
+                    <TextBlock Text="Ctrl+G — Agenda" FontSize="12" Opacity="0.75" />
+                    <TextBlock Text="Ctrl+B — Banco de dados" FontSize="12" Opacity="0.75" />
+                    <TextBlock Text="Ctrl+D — Alternar tema claro/escuro" FontSize="12" Opacity="0.75" />
+                    <TextBlock Text="Ctrl+H — Tela inicial" FontSize="12" Opacity="0.75" />
+                    <TextBlock Text="Esc — Voltar" FontSize="12" Opacity="0.75" />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+    </DockPanel>
+
+</UserControl>

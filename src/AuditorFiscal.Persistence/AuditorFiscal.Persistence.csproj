@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Sqlite.Core / Data.Sqlite.Core (not the plain packages) so we can register the
+         SQLCipher-enabled SQLitePCLRaw provider ourselves without a conflicting default provider. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuditorFiscal.Domain\AuditorFiscal.Domain.csproj" />
+    <ProjectReference Include="..\AuditorFiscal.Application\AuditorFiscal.Application.csproj" />
+    <ProjectReference Include="..\AuditorFiscal.Shared\AuditorFiscal.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

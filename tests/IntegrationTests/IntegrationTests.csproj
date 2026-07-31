@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="AwesomeAssertions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AuditorFiscal.Domain\AuditorFiscal.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AuditorFiscal.Application\AuditorFiscal.Application.csproj" />
+    <ProjectReference Include="..\..\src\AuditorFiscal.Persistence\AuditorFiscal.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\AuditorFiscal.Infrastructure\AuditorFiscal.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\AuditorFiscal.Shared\AuditorFiscal.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AuditorFiscal.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+             x:Class="AuditorFiscal.UI.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="48,40">
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Text="Auditor Fiscal" FontSize="30" FontWeight="Bold" />
+            <TextBlock Text="{Binding Resumo}" Opacity="0.65" />
+        </StackPanel>
+
+        <UniformGrid Grid.Row="1" Columns="3" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Button Classes="card" Margin="12" Command="{Binding NovaOrdemServicoCommand}"
+                    AutomationProperties.AutomationId="BtnNovaOrdemServico"
+                    AutomationProperties.Name="Nova Ordem de Serviço">
+                <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <TextBlock Text="📋" FontSize="44" HorizontalAlignment="Center" />
+                    <TextBlock Text="Nova Ordem de Serviço" FontSize="16" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+                    <TextBlock Text="Ctrl+N" FontSize="11" Opacity="0.5" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <Button Classes="card" Margin="12" Command="{Binding AgendaCommand}"
+                    AutomationProperties.AutomationId="BtnAgenda"
+                    AutomationProperties.Name="Agenda">
+                <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <TextBlock Text="📅" FontSize="44" HorizontalAlignment="Center" />
+                    <TextBlock Text="Agenda" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Text="Ctrl+G" FontSize="11" Opacity="0.5" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <Button Classes="card" Margin="12" Command="{Binding BancoDadosCommand}"
+                    AutomationProperties.AutomationId="BtnBancoDados"
+                    AutomationProperties.Name="Banco de Dados">
+                <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <TextBlock Text="🗄" FontSize="44" HorizontalAlignment="Center" />
+                    <TextBlock Text="Banco de Dados" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Text="Ctrl+B" FontSize="11" Opacity="0.5" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </UniformGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="28" HorizontalAlignment="Center">
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="{Binding TotalHoje}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
+                <TextBlock Text="Hoje" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="{Binding TotalSemana}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
+                <TextBlock Text="Nesta semana" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="{Binding TotalPendentes}" FontSize="22" FontWeight="Bold"
+                           Foreground="#F59E0B" HorizontalAlignment="Center" />
+                <TextBlock Text="Em aberto" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+
+</UserControl>

@@ -1,0 +1,226 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AuditorFiscal.UI.ViewModels"
+             xmlns:agenda="using:AuditorFiscal.UI.ViewModels.Agenda"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
+             x:Class="AuditorFiscal.UI.Views.AgendaView"
+             x:DataType="vm:AgendaViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Button.slot">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource GradeAgendaBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,1,1" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="3" />
+            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Button.slot.fimDeSemana">
+            <Setter Property="Background" Value="{DynamicResource FimDeSemanaBrush}" />
+        </Style>
+        <Style Selector="Button.slot:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource HoverSlotBrush}" />
+        </Style>
+
+        <Style Selector="Button.evento">
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="BorderThickness" Value="0,0,0,0" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="GradeAgendaBrush" Color="#E2E8F0" />
+                    <SolidColorBrush x:Key="FimDeSemanaBrush" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="HoverSlotBrush" Color="#EFF6FF" />
+                    <SolidColorBrush x:Key="PainelBrush" Color="#F8FAFC" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="GradeAgendaBrush" Color="#27272A" />
+                    <SolidColorBrush x:Key="FimDeSemanaBrush" Color="#141416" />
+                    <SolidColorBrush x:Key="HoverSlotBrush" Color="#1E293B" />
+                    <SolidColorBrush x:Key="PainelBrush" Color="#131316" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <DockPanel Margin="20">
+
+        <!-- Cabeçalho -->
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,14">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Button Content="←" Command="{Binding VoltarCommand}" ToolTip.Tip="Voltar ao início" />
+                <StackPanel>
+                    <TextBlock Text="Agenda" FontSize="22" FontWeight="Bold" />
+                    <TextBlock Text="Clique num horário livre para agendar" FontSize="12" Opacity="0.6" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Content="‹" Command="{Binding SemanaAnteriorCommand}" Width="36" />
+                <TextBlock Text="{Binding TituloPeriodo}" FontSize="15" FontWeight="SemiBold"
+                           VerticalAlignment="Center" MinWidth="220" TextAlignment="Center" />
+                <Button Content="›" Command="{Binding ProximaSemanaCommand}" Width="36" />
+                <Button Content="Hoje" Command="{Binding HojeCommand}" Margin="8,0,0,0" />
+            </StackPanel>
+
+            <Button Grid.Column="2" Content="+ Nova OS" Classes="accent"
+                    Command="{Binding NovaOrdemCommand}" VerticalAlignment="Center"
+                    AutomationProperties.AutomationId="BtnNovaOS" />
+        </Grid>
+
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding MensagemStatus}" Opacity="0.75"
+                   Margin="0,10,0,0" IsVisible="{Binding MensagemStatus, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+
+        <Grid ColumnDefinitions="*,Auto">
+
+            <!-- Grade da semana -->
+            <Border Grid.Column="0" BorderBrush="{DynamicResource GradeAgendaBrush}" BorderThickness="1" CornerRadius="8" ClipToBounds="True">
+                <DockPanel>
+                    <!-- Cabeçalho dos dias -->
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="56,*">
+                        <Border Grid.Column="0" BorderBrush="{DynamicResource GradeAgendaBrush}" BorderThickness="0,0,1,1" />
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Cabecalhos}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="7" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="agenda:CabecalhoDiaViewModel">
+                                    <Border BorderBrush="{DynamicResource GradeAgendaBrush}" BorderThickness="0,0,1,1" Padding="4,8">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding DiaSemana}" FontSize="11" Opacity="0.65"
+                                                       HorizontalAlignment="Center" />
+                                            <TextBlock Text="{Binding DiaNumero}" FontSize="17" FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center" />
+                                            <Border Height="3" Width="22" CornerRadius="2" Margin="0,3,0,0"
+                                                    Background="{DynamicResource SystemAccentColor}"
+                                                    IsVisible="{Binding EhHoje}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+
+                    <!-- Linhas de horário -->
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Linhas}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="agenda:LinhaHorarioViewModel">
+                                    <Grid ColumnDefinitions="56,*">
+                                        <Border Grid.Column="0" BorderBrush="{DynamicResource GradeAgendaBrush}" BorderThickness="0,0,1,1">
+                                            <TextBlock Text="{Binding HoraTexto}" FontSize="11" Opacity="0.6"
+                                                       HorizontalAlignment="Center" Margin="0,6,0,0" />
+                                        </Border>
+
+                                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Celulas}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <UniformGrid Columns="7" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="agenda:CelulaAgendaViewModel">
+                                                    <Button Classes="slot" Classes.fimDeSemana="{Binding EhFimDeSemana}"
+                                                            Command="{Binding $parent[UserControl].((vm:AgendaViewModel)DataContext).NovaOrdemNoHorarioCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Clique para agendar neste horário">
+                                                        <ItemsControl ItemsSource="{Binding Eventos}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="agenda:EventoAgendaViewModel">
+                                                                    <Button Classes="evento" Margin="0,0,0,2"
+                                                                            Background="{Binding Cor}"
+                                                                            Command="{Binding $parent[UserControl].((vm:AgendaViewModel)DataContext).SelecionarEventoCommand}"
+                                                                            CommandParameter="{Binding}">
+                                                                        <StackPanel>
+                                                                            <TextBlock Text="{Binding Empresa}" FontSize="11" FontWeight="SemiBold"
+                                                                                       Foreground="White" TextTrimming="CharacterEllipsis" />
+                                                                            <TextBlock Text="{Binding HoraTexto}" FontSize="10"
+                                                                                       Foreground="White" Opacity="0.85" />
+                                                                        </StackPanel>
+                                                                    </Button>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- Painel de detalhes -->
+            <Border Grid.Column="1" Width="310" Margin="16,0,0,0" Padding="18" CornerRadius="8"
+                    Background="{DynamicResource PainelBrush}"
+                    BorderBrush="{DynamicResource GradeAgendaBrush}" BorderThickness="1"
+                    IsVisible="{Binding TemSelecao}">
+                <ScrollViewer>
+                    <StackPanel Spacing="10" DataContext="{Binding EventoSelecionado}"
+                                x:DataType="agenda:EventoAgendaViewModel">
+                        <Border Background="{Binding Cor}" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding SituacaoTexto}" Foreground="White" FontSize="11" FontWeight="SemiBold" />
+                        </Border>
+
+                        <TextBlock Text="{Binding Empresa}" FontSize="17" FontWeight="Bold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Numero}" Opacity="0.7" FontSize="12" />
+
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Horário" FontSize="11" Opacity="0.6" />
+                            <TextBlock Text="{Binding HoraTexto}" FontWeight="SemiBold" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Cidade" FontSize="11" Opacity="0.6" />
+                            <TextBlock Text="{Binding Cidade}" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Separator Margin="0,6" />
+
+                        <StackPanel Spacing="6" DataContext="{Binding $parent[UserControl].DataContext}"
+                                    x:DataType="vm:AgendaViewModel">
+                            <TextBlock Text="Alterar situação" FontSize="11" Opacity="0.6" />
+                            <ComboBox ItemsSource="{Binding SituacoesDisponiveis}" SelectedItem="{Binding SituacaoEdicao}"
+                                      HorizontalAlignment="Stretch" />
+                            <Button Content="Aplicar" Command="{Binding AplicarSituacaoCommand}" HorizontalAlignment="Stretch" />
+
+                            <Separator Margin="0,6" />
+
+                            <Button Content="Abrir / Editar" Classes="accent" HorizontalAlignment="Stretch"
+                                    Command="{Binding AbrirDetalheCommand}" />
+                            <Button Content="Adiar 1 dia" HorizontalAlignment="Stretch" Command="{Binding AdiarUmDiaCommand}" />
+                            <Button Content="Favoritar" HorizontalAlignment="Stretch" Command="{Binding AlternarFavoritoCommand}" />
+                            <Button Content="Exportar PDF" HorizontalAlignment="Stretch" Command="{Binding ExportarPdfCommand}" />
+                            <Button Content="Imprimir" HorizontalAlignment="Stretch" Command="{Binding ImprimirCommand}" />
+                            <Button Content="Excluir" HorizontalAlignment="Stretch" Command="{Binding ExcluirCommand}"
+                                    Foreground="#EF4444" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+        </Grid>
+
+    </DockPanel>
+
+</UserControl>

@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AuditorFiscal.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="740"
+        x:Class="AuditorFiscal.UI.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Auditor Fiscal"
+        Width="1200" Height="740"
+        MinWidth="900" MinHeight="600">
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding NovaOrdemServicoCommand}" />
+        <KeyBinding Gesture="Ctrl+G" Command="{Binding AgendaCommand}" />
+        <KeyBinding Gesture="Ctrl+B" Command="{Binding BancoDadosCommand}" />
+        <KeyBinding Gesture="Ctrl+H" Command="{Binding InicioCommand}" />
+        <KeyBinding Gesture="Ctrl+D" Command="{Binding AlternarTemaCommand}" />
+        <KeyBinding Gesture="Escape" Command="{Binding VoltarCommand}" />
+    </Window.KeyBindings>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Padding="14,8" BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Grid.Column="0" Text="Auditor Fiscal" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Opacity="0.85" />
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                    <Button Content="{Binding IconeTema}" Command="{Binding AlternarTemaCommand}"
+                            ToolTip.Tip="Alternar tema claro/escuro (Ctrl+D)"
+                            AutomationProperties.AutomationId="BtnTema" />
+                    <Button Content="⚙" Command="{Binding ConfiguracoesCommand}"
+                            ToolTip.Tip="Configurações"
+                            AutomationProperties.AutomationId="BtnConfiguracoes" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ContentControl Content="{Binding CurrentPage}" />
+    </DockPanel>
+
+</Window>

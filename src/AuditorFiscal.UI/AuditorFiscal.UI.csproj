@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>AuditorFiscal</AssemblyName>
+    <RootNamespace>AuditorFiscal.UI</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Executável único (requisito do CLAUDE.md): self-contained precisa ser explícito a
+    partir do SDK do .NET 8 — informar só o RuntimeIdentifier não basta e resultaria,
+    silenciosamente, em um build dependente do runtime instalado na máquina do auditor.
+    Sem trimming: Avalonia (XAML/reflection) e EF Core não são totalmente
+    trim-safe: cortar assemblies arriscaria quebrar o app em produção.
+  -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuditorFiscal.Domain\AuditorFiscal.Domain.csproj" />
+    <ProjectReference Include="..\AuditorFiscal.Application\AuditorFiscal.Application.csproj" />
+    <ProjectReference Include="..\AuditorFiscal.Persistence\AuditorFiscal.Persistence.csproj" />
+    <ProjectReference Include="..\AuditorFiscal.Infrastructure\AuditorFiscal.Infrastructure.csproj" />
+    <ProjectReference Include="..\AuditorFiscal.Shared\AuditorFiscal.Shared.csproj" />
+  </ItemGroup>
+</Project>

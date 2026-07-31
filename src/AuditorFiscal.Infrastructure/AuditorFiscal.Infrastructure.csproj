@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <PackageReference Include="PDFsharp-gdi" />
+    <PackageReference Include="ClosedXML" />
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Extensions.Hosting" />
+    <PackageReference Include="Serilog.Sinks.File" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuditorFiscal.Domain\AuditorFiscal.Domain.csproj" />
+    <ProjectReference Include="..\AuditorFiscal.Application\AuditorFiscal.Application.csproj" />
+    <ProjectReference Include="..\AuditorFiscal.Shared\AuditorFiscal.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
