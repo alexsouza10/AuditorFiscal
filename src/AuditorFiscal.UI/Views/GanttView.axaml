@@ -304,26 +304,6 @@
             </WrapPanel>
         </Border>
 
-        <!-- Notificações de NCRE -->
-        <Border Grid.Row="4" Margin="0,10,0,0" Padding="12" CornerRadius="8"
-                Background="#332F1300" BorderBrush="#EAB308" BorderThickness="1"
-                IsVisible="{Binding TemNotificacoesNcre}">
-            <StackPanel Spacing="6">
-                <TextBlock Text="⚠ Notificações NCRE" FontWeight="SemiBold" FontSize="12" Foreground="#EAB308" />
-                <ItemsControl ItemsSource="{Binding NotificacoesNcre}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="gantt:NotificacaoNcreViewModel">
-                            <Button Classes="linkNotificacao" HorizontalAlignment="Left" HorizontalContentAlignment="Left"
-                                    Command="{Binding $parent[UserControl].((vm:GanttViewModel)DataContext).AbrirNotificacaoNcreCommand}"
-                                    CommandParameter="{Binding}">
-                                <TextBlock Text="{Binding Texto}" FontSize="12" TextWrapping="Wrap" />
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
-        </Border>
-
         <TextBlock Grid.Row="4" Text="{Binding MensagemStatus}" Opacity="0.75" Margin="0,10,0,0"
                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
                    IsVisible="{Binding MensagemStatus, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />

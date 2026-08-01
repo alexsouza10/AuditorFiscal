@@ -8,5 +8,6 @@ public partial class OrdemServicoFormView : UserControl
     {
         InitializeComponent();
         CalendarWheelGuard.AplicarEm(this);
+        DatePickerAutoFormat.AplicarEm(this);
     }
 }

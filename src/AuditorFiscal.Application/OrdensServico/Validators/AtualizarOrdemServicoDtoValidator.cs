@@ -17,6 +17,10 @@ public class AtualizarOrdemServicoDtoValidator : AbstractValidator<AtualizarOrde
         RuleFor(x => x.Observacoes).MaximumLength(4000);
         RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).When(x => x.Latitude.HasValue);
         RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).When(x => x.Longitude.HasValue);
+        RuleFor(x => x)
+            .Must(x => x.Latitude.HasValue == x.Longitude.HasValue)
+            .WithMessage("Informe latitude e longitude juntas, ou deixe as duas em branco.")
+            .OverridePropertyName(nameof(AtualizarOrdemServicoDto.Longitude));
 
         RuleFor(x => x.AberturaSfit).GreaterThanOrEqualTo(x => x.RecebimentoSfit)
             .WithMessage("Abertura no SFIT não pode ser antes do recebimento.");

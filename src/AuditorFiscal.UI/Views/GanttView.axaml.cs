@@ -8,5 +8,6 @@ public partial class GanttView : UserControl
     {
         InitializeComponent();
         CalendarWheelGuard.AplicarEm(this);
+        DatePickerAutoFormat.AplicarEm(this);
     }
 }

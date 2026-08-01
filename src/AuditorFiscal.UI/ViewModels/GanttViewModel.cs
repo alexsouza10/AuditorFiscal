@@ -47,11 +47,9 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<MesGanttViewModel> Meses { get; } = [];
     public ObservableCollection<LinhaGanttViewModel> Linhas { get; } = [];
-    public ObservableCollection<NotificacaoNcreViewModel> NotificacoesNcre { get; } = [];
     public IReadOnlyList<SituacaoOS> SituacoesDisponiveis { get; } = Enum.GetValues<SituacaoOS>();
 
     public bool TemSelecao => Selecionada is not null;
-    public bool TemNotificacoesNcre => NotificacoesNcre.Count > 0;
 
     public GanttViewModel(
         OrdemServicoService ordemServicoService,
@@ -265,14 +263,6 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
-    private async Task AbrirNotificacaoNcreAsync(NotificacaoNcreViewModel notificacao)
-    {
-        var formulario = _navigation.Resolver<OrdemServicoFormViewModel>();
-        await formulario.CarregarParaEdicaoAsync(notificacao.OrdemServicoId);
-        _navigation.NavegarPara(formulario);
-    }
-
-    [RelayCommand]
     private void Voltar() => _navigation.IrParaInicio();
 
     private async Task CarregarAsync(Guid? manterSelecionado = null)
@@ -323,34 +313,11 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
                 selecionar = linha;
         }
 
-        AtualizarNotificacoesNcre(ordens);
-
         Selecionada = null;
         OnPropertyChanged(nameof(TemSelecao));
 
         if (selecionar is not null)
             SelecionarLinha(selecionar);
-    }
-
-    /// <summary>
-    /// Alerta o auditor sobre O.S. sem NCRE cadastrado — não bloqueia nada, só sinaliza,
-    /// já que o cadastro do NCRE é opcional por natureza.
-    /// </summary>
-    private void AtualizarNotificacoesNcre(IReadOnlyList<OrdemServico> ordens)
-    {
-        NotificacoesNcre.Clear();
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-
-        foreach (var ordemServico in ordens.Where(o => !o.TemNcre).OrderBy(o => o.DataFinal))
-        {
-            var diasRestantes = ordemServico.DataFinal.DayNumber - hoje.DayNumber;
-            var prazoTexto = diasRestantes >= 0 ? $"{diasRestantes} dia(s)" : $"vencido há {-diasRestantes} dia(s)";
-
-            NotificacoesNcre.Add(new NotificacaoNcreViewModel(ordemServico.Id,
-                $"{ordemServico.Numero} — {ordemServico.Empresa}: NCRE não cadastrado — prazo limite para cumprir esta ordem: {prazoTexto} ({ordemServico.DataFinal:dd/MM/yyyy})"));
-        }
-
-        OnPropertyChanged(nameof(TemNotificacoesNcre));
     }
 
     private static string MontarTitulo(DateOnly inicio, DateOnly fim)
