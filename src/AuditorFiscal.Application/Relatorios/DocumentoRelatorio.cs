@@ -79,14 +79,15 @@ public static class RelatorioBuilder
                 AdicionarCampo(linhas, "Documentos", os.Anexos.Count.ToString());
         }
 
-        if (os.Timeline.Count > 0)
-        {
-            linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
-            linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Histórico"));
-            foreach (var evento in os.Timeline.OrderBy(t => t.OcorridoEm))
-                linhas.Add(new LinhaRelatorio(EstiloLinha.Campo,
-                    evento.OcorridoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm"), evento.Descricao));
-        }
+        // Histórico removido do PDF a pedido — descomente para reativar.
+        // if (os.Timeline.Count > 0)
+        // {
+        //     linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
+        //     linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Histórico"));
+        //     foreach (var evento in os.Timeline.OrderBy(t => t.OcorridoEm))
+        //         linhas.Add(new LinhaRelatorio(EstiloLinha.Campo,
+        //             evento.OcorridoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm"), evento.Descricao));
+        // }
 
         return new DocumentoRelatorio($"OS {os.Numero}", linhas);
     }

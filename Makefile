@@ -2,14 +2,17 @@
 # em dist/<versão>/, além de um .zip pronto para distribuir.
 #
 # Uso:
-#   make            # publica usando a última tag do git como versão
+#   make deploy     # cria a próxima tag E JÁ publica com ela — o comando para mandar
+#                    # uma versão nova para as pessoas, sempre gerando uma tag nova
+#   make            # só publica, usando a última tag do git como versão (não cria tag)
 #   make release    # idem
 #   make version    # só mostra qual versão seria usada
-#   make tag        # cria e publica a próxima tag (bump de minor: v0.1.0 -> v0.2.0...)
+#   make tag        # só cria e publica a próxima tag, sem gerar o pacote
 #   make clean      # apaga dist/
 #
-# A versão vem de "git describe --tags" — para publicar a versão 1.2.0, marque o
-# commit antes com `make tag` (ou manualmente: `git tag v1.2.0 && git push origin v1.2.0`).
+# A versão vem de "git describe --tags". "release"/"publish" NUNCA criam tag nova —
+# eles só empacotam o que já existe. Quem cria a tag é "make tag" (chamado
+# internamente por "make deploy"), com bump de minor: v0.1.0 -> v0.2.0 -> ...
 
 # Força o Git Bash como shell das receitas, não importa de onde "make" foi chamado
 # (PowerShell e cmd.exe usam cmd.exe por padrão, que não entende $$, cut, ${VAR#...} etc.
@@ -31,9 +34,10 @@ VERSION      := $(if $(GIT_DESCRIBE),$(patsubst v%,%,$(GIT_DESCRIBE)),0.0.0-dev)
 PUBLISH_DIR  := $(DIST_DIR)/$(VERSION)
 ZIP_FILE     := $(DIST_DIR)/AuditorFiscal-$(VERSION)-$(RUNTIME).zip
 
-.PHONY: all release clean version tag
+.PHONY: all release clean version tag deploy publish
 
 all: release
+publish: release
 
 version:
 	@:; echo "$(VERSION)"
@@ -66,3 +70,11 @@ release:
 
 clean:
 	@:; rm -rf $(DIST_DIR)
+
+# Combina "tag" + "release" num comando só. Precisa disparar "release" numa sub-make
+# ($(MAKE) release, não só uma dependência "deploy: tag release"): VERSION é calculada
+# uma única vez, no início desta invocação do make — se "release" reaproveitasse essa
+# mesma invocação, ainda pegaria a tag ANTIGA, mesmo depois de "tag" já ter criado a
+# nova. A sub-make relê o Makefile do zero e recalcula VERSION já com a tag nova.
+deploy: tag
+	@$(MAKE) release
