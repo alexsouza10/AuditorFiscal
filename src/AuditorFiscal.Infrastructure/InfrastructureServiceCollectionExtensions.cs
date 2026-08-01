@@ -1,8 +1,8 @@
 using AuditorFiscal.Application.Interfaces.Services;
 using AuditorFiscal.Infrastructure.Backup;
+using AuditorFiscal.Infrastructure.Enderecos;
 using AuditorFiscal.Infrastructure.Export;
 using AuditorFiscal.Infrastructure.Preferences;
-using AuditorFiscal.Infrastructure.Printing;
 using AuditorFiscal.Infrastructure.Security;
 using AuditorFiscal.Infrastructure.System;
 using AuditorFiscal.Shared;
@@ -28,8 +28,8 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddTransient<IPdfExportService, PdfExportService>();
         services.AddTransient<IExcelExportService, ExcelExportService>();
-        services.AddTransient<IPrintService, PrintService>();
         services.AddTransient<IBackupService, BackupService>();
+        services.AddSingleton<ICepLookupService, ViaCepLookupService>();
 
         return services;
     }

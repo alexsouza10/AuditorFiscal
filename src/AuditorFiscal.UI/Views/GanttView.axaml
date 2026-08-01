@@ -262,7 +262,6 @@
                                 <Button Content="Adiar 1 semana" HorizontalAlignment="Stretch" Command="{Binding AdiarUmaSemanaCommand}" />
                                 <Button Content="Favoritar" HorizontalAlignment="Stretch" Command="{Binding AlternarFavoritoCommand}" />
                                 <Button Content="Exportar PDF" HorizontalAlignment="Stretch" Command="{Binding ExportarPdfCommand}" />
-                                <Button Content="Imprimir" HorizontalAlignment="Stretch" Command="{Binding ImprimirCommand}" />
                                 <Button Content="Excluir" HorizontalAlignment="Stretch" Command="{Binding ExcluirCommand}"
                                         Foreground="#EF4444" />
                             </StackPanel>

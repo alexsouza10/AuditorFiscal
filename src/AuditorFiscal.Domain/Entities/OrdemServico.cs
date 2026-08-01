@@ -128,15 +128,25 @@ public class OrdemServico : EntidadeBase
     {
         // Sem essa checagem, o auto-save do formulário reenviava os mesmos dados a cada
         // poucos segundos e lotava o histórico com entradas idênticas de "atualizado".
-        var mudou =
-            Empresa != empresa || !Cnpj.Equals(cnpj) || Endereco != endereco || Cidade != cidade ||
-            Responsavel != responsavel || Fiscalizacao != fiscalizacao ||
-            RecebimentoSfit != recebimentoSfit || AberturaSfit != aberturaSfit ||
-            DataFiscalizacao != dataFiscalizacao || PrazoNad != prazoNad || PrazoNco != prazoNco ||
-            ElaboracaoAutos != elaboracaoAutos || DataFinal != dataFinal || Observacoes != observacoes ||
-            Latitude != coordenada?.Latitude || Longitude != coordenada?.Longitude;
+        var alteracoes = new List<string>();
+        RegistrarSeMudou(alteracoes, "Empresa", Empresa, empresa);
+        RegistrarSeMudou(alteracoes, "CNPJ", Cnpj.Formatado(), cnpj.Formatado());
+        RegistrarSeMudou(alteracoes, "Endereço", Endereco, endereco);
+        RegistrarSeMudou(alteracoes, "Cidade", Cidade, cidade);
+        RegistrarSeMudou(alteracoes, "Responsável", Responsavel, responsavel);
+        RegistrarSeMudou(alteracoes, "Fiscalização", Fiscalizacao.ToString(), fiscalizacao.ToString());
+        RegistrarSeMudou(alteracoes, "Recebimento SFIT", RecebimentoSfit.ToString("dd/MM/yyyy"), recebimentoSfit.ToString("dd/MM/yyyy"));
+        RegistrarSeMudou(alteracoes, "Abertura SFIT", AberturaSfit.ToString("dd/MM/yyyy"), aberturaSfit.ToString("dd/MM/yyyy"));
+        RegistrarSeMudou(alteracoes, "Data da fiscalização", DataFiscalizacao.ToString("dd/MM/yyyy"), dataFiscalizacao.ToString("dd/MM/yyyy"));
+        RegistrarSeMudou(alteracoes, "Prazo NAD", PrazoNad.ToString("dd/MM/yyyy"), prazoNad.ToString("dd/MM/yyyy"));
+        RegistrarSeMudou(alteracoes, "Prazo NCO", PrazoNco.ToString("dd/MM/yyyy"), prazoNco.ToString("dd/MM/yyyy"));
+        RegistrarSeMudou(alteracoes, "Elaboração dos autos", ElaboracaoAutos.ToString("dd/MM/yyyy"), elaboracaoAutos.ToString("dd/MM/yyyy"));
+        RegistrarSeMudou(alteracoes, "Data final", DataFinal.ToString("dd/MM/yyyy"), dataFinal.ToString("dd/MM/yyyy"));
+        RegistrarSeMudou(alteracoes, "Observações", Observacoes, observacoes);
+        RegistrarSeMudou(alteracoes, "Latitude", Latitude?.ToString("F6"), coordenada?.Latitude.ToString("F6"));
+        RegistrarSeMudou(alteracoes, "Longitude", Longitude?.ToString("F6"), coordenada?.Longitude.ToString("F6"));
 
-        if (!mudou)
+        if (alteracoes.Count == 0)
             return;
 
         Empresa = Guard.NotNullOrWhiteSpace(empresa, nameof(empresa));
@@ -157,7 +167,17 @@ public class OrdemServico : EntidadeBase
         Longitude = coordenada?.Longitude;
 
         MarcarAtualizado(momento);
-        _timeline.Add(new TimelineEvento(Id, "Dados da ordem de serviço atualizados.", momento));
+        _timeline.Add(new TimelineEvento(Id, string.Join(" | ", alteracoes), momento));
+    }
+
+    private static void RegistrarSeMudou(List<string> alteracoes, string campo, string? valorAntigo, string? valorNovo)
+    {
+        if (valorAntigo == valorNovo)
+            return;
+
+        var de = string.IsNullOrWhiteSpace(valorAntigo) ? "(vazio)" : valorAntigo;
+        var para = string.IsNullOrWhiteSpace(valorNovo) ? "(vazio)" : valorNovo;
+        alteracoes.Add($"{campo} alterado de \"{de}\" para \"{para}\"");
     }
 
     public void AlterarSituacao(SituacaoOS novaSituacao, DateTimeOffset momento)

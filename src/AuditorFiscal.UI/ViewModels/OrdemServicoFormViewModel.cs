@@ -22,7 +22,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     private readonly IFileDialogService _fileDialog;
     private readonly IDialogService _dialogs;
     private readonly IPdfExportService _pdfExport;
-    private readonly IPrintService _printService;
+    private readonly ICepLookupService _cepLookup;
     private readonly DispatcherTimer _autoSaveTimer;
 
     private readonly List<NovoArquivoDto> _arquivosPendentes = [];
@@ -35,9 +35,12 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string _numero = string.Empty;
     [ObservableProperty] private string _empresa = string.Empty;
     [ObservableProperty] private string _cnpj = string.Empty;
+    [ObservableProperty] private string? _cep;
     [ObservableProperty] private string _endereco = string.Empty;
     [ObservableProperty] private string _cidade = string.Empty;
     [ObservableProperty] private string _responsavel = string.Empty;
+    [ObservableProperty] private bool _mostrarArquivos;
+    [ObservableProperty] private string? _mensagemCep;
     [ObservableProperty] private TipoFiscalizacao _fiscalizacaoSelecionada = TipoFiscalizacao.Direta;
 
     // As etapas do fluxo SFIT (CLAUDE V2), na ordem em que a auditoria progride. Ficam em
@@ -75,7 +78,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         IFileDialogService fileDialog,
         IDialogService dialogs,
         IPdfExportService pdfExport,
-        IPrintService printService)
+        ICepLookupService cepLookup)
     {
         _ordemServicoService = ordemServicoService;
         _navigation = navigation;
@@ -83,7 +86,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         _fileDialog = fileDialog;
         _dialogs = dialogs;
         _pdfExport = pdfExport;
-        _printService = printService;
+        _cepLookup = cepLookup;
 
         _autoSaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         _autoSaveTimer.Tick += async (_, _) => await SalvarAutomaticamenteAsync();
@@ -217,6 +220,27 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private async Task BuscarCepAsync()
+    {
+        MensagemCep = null;
+
+        if (string.IsNullOrWhiteSpace(Cep))
+            return;
+
+        var endereco = await _cepLookup.BuscarAsync(Cep);
+        if (endereco is null)
+        {
+            MensagemCep = "CEP não encontrado ou sem conexão com a internet.";
+            return;
+        }
+
+        Endereco = string.IsNullOrWhiteSpace(endereco.Bairro)
+            ? endereco.Logradouro
+            : $"{endereco.Logradouro}, {endereco.Bairro}";
+        Cidade = string.IsNullOrWhiteSpace(endereco.Uf) ? endereco.Cidade : $"{endereco.Cidade}/{endereco.Uf}";
+    }
+
+    [RelayCommand]
     private async Task AdicionarFotosAsync()
     {
         foreach (var arquivo in await _filePicker.SelecionarImagensAsync())
@@ -282,6 +306,11 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task ExportarPdfAsync()
     {
+        // Garante que anexos/alterações recém-adicionados (ainda não persistidos pelo
+        // auto-save) estejam no banco antes de exportar — senão o PDF sai desatualizado.
+        if (_sujo)
+            await SalvarAsync();
+
         var ordemServico = await _ordemServicoService.ObterDetalheAsync(_ordemServicoId);
         if (ordemServico is null)
             return;
@@ -292,24 +321,6 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
 
         await _pdfExport.ExportarOrdemServicoAsync(ordemServico, destino);
         MensagemStatus = "PDF exportado.";
-    }
-
-    [RelayCommand]
-    private async Task ImprimirAsync()
-    {
-        var ordemServico = await _ordemServicoService.ObterDetalheAsync(_ordemServicoId);
-        if (ordemServico is null)
-            return;
-
-        try
-        {
-            await _printService.ImprimirAsync(ordemServico);
-            MensagemStatus = "Enviado para a impressora.";
-        }
-        catch (Exception excecao)
-        {
-            MensagemErro = $"Não foi possível imprimir: {excecao.Message}";
-        }
     }
 
     [RelayCommand]
@@ -414,7 +425,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         base.OnPropertyChanged(e);
 
         if (_carregando || e.PropertyName is nameof(MensagemErro) or nameof(MensagemStatus)
-            or nameof(TituloPagina) or nameof(PodeExportar) or nameof(FavoritoTexto) or nameof(AbaSelecionada))
+            or nameof(TituloPagina) or nameof(PodeExportar) or nameof(FavoritoTexto) or nameof(AbaSelecionada)
+            or nameof(MensagemCep) or nameof(MostrarArquivos) or nameof(Cep))
             return;
 
         if (e.PropertyName is nameof(IsNovo) or nameof(Numero))

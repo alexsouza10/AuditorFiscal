@@ -7,5 +7,6 @@ public partial class OrdemServicoFormView : UserControl
     public OrdemServicoFormView()
     {
         InitializeComponent();
+        CalendarWheelGuard.AplicarEm(this);
     }
 }

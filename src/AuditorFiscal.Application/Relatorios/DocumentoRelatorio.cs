@@ -30,30 +30,35 @@ public static class RelatorioBuilder
             new(EstiloLinha.Titulo, $"Ordem de Serviço {os.Numero}"),
             new(EstiloLinha.Texto, $"Emitido em {DateTime.Now:dd/MM/yyyy HH:mm}"),
             new(EstiloLinha.Separador, string.Empty),
-            new(EstiloLinha.Subtitulo, "Identificação"),
-            new(EstiloLinha.Campo, "Empresa", os.Empresa),
-            new(EstiloLinha.Campo, "CNPJ", os.Cnpj.Formatado()),
-            new(EstiloLinha.Campo, "Endereço", os.Endereco),
-            new(EstiloLinha.Campo, "Cidade", os.Cidade),
-            new(EstiloLinha.Campo, "Responsável", os.Responsavel),
-            new(EstiloLinha.Separador, string.Empty),
-            new(EstiloLinha.Subtitulo, "Auditoria"),
-            new(EstiloLinha.Campo, "Situação", os.Situacao.Descricao()),
-            new(EstiloLinha.Campo, "Fiscalização", os.Fiscalizacao.Descricao()),
-            new(EstiloLinha.Separador, string.Empty),
-            new(EstiloLinha.Subtitulo, "Fluxo SFIT"),
-            new(EstiloLinha.Campo, "1. Recebimento SFIT", os.RecebimentoSfit.ToString("dd/MM/yyyy")),
-            new(EstiloLinha.Campo, "2. Abertura SFIT", os.AberturaSfit.ToString("dd/MM/yyyy")),
-            new(EstiloLinha.Campo, "3. Fiscalização", os.DataFiscalizacao.ToString("dd/MM/yyyy")),
-            new(EstiloLinha.Campo, "4. Prazo NAD", os.PrazoNad.ToString("dd/MM/yyyy")),
-            new(EstiloLinha.Campo, "5. Prazo NCO", os.PrazoNco.ToString("dd/MM/yyyy")),
-            new(EstiloLinha.Campo, "6. Elaboração dos autos", os.ElaboracaoAutos.ToString("dd/MM/yyyy")),
-            new(EstiloLinha.Campo, "7. Data final", os.DataFinal.ToString("dd/MM/yyyy"))
+            new(EstiloLinha.Subtitulo, "Identificação")
         };
 
+        AdicionarCampo(linhas, "Empresa", os.Empresa);
+        AdicionarCampo(linhas, "CNPJ", os.Cnpj.Formatado());
+        AdicionarCampo(linhas, "Endereço", os.Endereco);
+        AdicionarCampo(linhas, "Cidade", os.Cidade);
+        AdicionarCampo(linhas, "Responsável", os.Responsavel);
+
+        linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
+        linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Auditoria"));
+        AdicionarCampo(linhas, "Situação", os.Situacao.Descricao());
+        AdicionarCampo(linhas, "Fiscalização", os.Fiscalizacao.Descricao());
+
+        linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
+        linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Fluxo SFIT"));
+        AdicionarCampo(linhas, "1. Recebimento SFIT", os.RecebimentoSfit.ToString("dd/MM/yyyy"));
+        AdicionarCampo(linhas, "2. Abertura SFIT", os.AberturaSfit.ToString("dd/MM/yyyy"));
+        AdicionarCampo(linhas, "3. Fiscalização", os.DataFiscalizacao.ToString("dd/MM/yyyy"));
+        AdicionarCampo(linhas, "4. Prazo NAD", os.PrazoNad.ToString("dd/MM/yyyy"));
+        AdicionarCampo(linhas, "5. Prazo NCO", os.PrazoNco.ToString("dd/MM/yyyy"));
+        AdicionarCampo(linhas, "6. Elaboração dos autos", os.ElaboracaoAutos.ToString("dd/MM/yyyy"));
+        AdicionarCampo(linhas, "7. Data final", os.DataFinal.ToString("dd/MM/yyyy"));
+
+        if (os.TemNcre && os.PrazoNcre is not null)
+            AdicionarCampo(linhas, "Prazo NCRE", os.PrazoNcre.Value.ToString("dd/MM/yyyy"));
+
         if (os.Coordenada is not null)
-            linhas.Add(new LinhaRelatorio(EstiloLinha.Campo, "Coordenadas",
-                $"{os.Coordenada.Latitude:F6}, {os.Coordenada.Longitude:F6}"));
+            AdicionarCampo(linhas, "Coordenadas", $"{os.Coordenada.Latitude:F6}, {os.Coordenada.Longitude:F6}");
 
         if (!string.IsNullOrWhiteSpace(os.Observacoes))
         {
@@ -62,10 +67,17 @@ public static class RelatorioBuilder
             linhas.Add(new LinhaRelatorio(EstiloLinha.Texto, os.Observacoes));
         }
 
-        linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
-        linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Anexos"));
-        linhas.Add(new LinhaRelatorio(EstiloLinha.Campo, "Fotos", os.Fotos.Count.ToString()));
-        linhas.Add(new LinhaRelatorio(EstiloLinha.Campo, "Documentos", os.Anexos.Count.ToString()));
+        if (os.Fotos.Count > 0 || os.Anexos.Count > 0)
+        {
+            linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
+            linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Anexos"));
+
+            if (os.Fotos.Count > 0)
+                AdicionarCampo(linhas, "Fotos", os.Fotos.Count.ToString());
+
+            if (os.Anexos.Count > 0)
+                AdicionarCampo(linhas, "Documentos", os.Anexos.Count.ToString());
+        }
 
         if (os.Timeline.Count > 0)
         {
@@ -77,6 +89,13 @@ public static class RelatorioBuilder
         }
 
         return new DocumentoRelatorio($"OS {os.Numero}", linhas);
+    }
+
+    /// <summary>Só entra no PDF o que o auditor de fato preencheu — sem linhas em branco.</summary>
+    private static void AdicionarCampo(List<LinhaRelatorio> linhas, string rotulo, string? valor)
+    {
+        if (!string.IsNullOrWhiteSpace(valor))
+            linhas.Add(new LinhaRelatorio(EstiloLinha.Campo, rotulo, valor));
     }
 
     public static DocumentoRelatorio DeLista(string titulo, IReadOnlyList<OrdemServico> ordens)

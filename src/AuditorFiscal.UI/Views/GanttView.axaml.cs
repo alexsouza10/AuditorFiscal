@@ -7,5 +7,6 @@ public partial class GanttView : UserControl
     public GanttView()
     {
         InitializeComponent();
+        CalendarWheelGuard.AplicarEm(this);
     }
 }

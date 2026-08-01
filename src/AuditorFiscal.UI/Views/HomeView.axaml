@@ -18,7 +18,8 @@
             </Button>
         </StackPanel>
 
-        <UniformGrid Grid.Row="1" Columns="4" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Center">
             <Button Classes="card" Margin="12" Command="{Binding NovaOrdemServicoCommand}"
                     AutomationProperties.AutomationId="BtnNovaOrdemServico"
                     AutomationProperties.Name="Nova Ordem de Serviço">
@@ -59,7 +60,8 @@
                     <TextBlock Text="Ctrl+K" FontSize="11" Opacity="0.5" HorizontalAlignment="Center" />
                 </StackPanel>
             </Button>
-        </UniformGrid>
+        </WrapPanel>
+        </ScrollViewer>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="28" HorizontalAlignment="Center">
             <StackPanel HorizontalAlignment="Center">

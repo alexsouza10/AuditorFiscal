@@ -27,7 +27,6 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     private readonly INavigationService _navigation;
     private readonly IDialogService _dialogs;
     private readonly IPdfExportService _pdfExport;
-    private readonly IPrintService _printService;
     private readonly IFileDialogService _fileDialog;
     private readonly DispatcherTimer _debounceBusca;
 
@@ -59,14 +58,12 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         INavigationService navigation,
         IDialogService dialogs,
         IPdfExportService pdfExport,
-        IPrintService printService,
         IFileDialogService fileDialog)
     {
         _ordemServicoService = ordemServicoService;
         _navigation = navigation;
         _dialogs = dialogs;
         _pdfExport = pdfExport;
-        _printService = printService;
         _fileDialog = fileDialog;
 
         var inicioMesAtual = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -255,27 +252,6 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
 
         await _pdfExport.ExportarOrdemServicoAsync(ordemServico, destino);
         MensagemStatus = "PDF exportado.";
-    }
-
-    [RelayCommand]
-    private async Task ImprimirAsync()
-    {
-        if (Selecionada is null)
-            return;
-
-        var ordemServico = await _ordemServicoService.ObterDetalheAsync(Selecionada.Id);
-        if (ordemServico is null)
-            return;
-
-        try
-        {
-            await _printService.ImprimirAsync(ordemServico);
-            MensagemStatus = "Enviado para a impressora.";
-        }
-        catch (Exception excecao)
-        {
-            MensagemStatus = $"Falha ao imprimir: {excecao.Message}";
-        }
     }
 
     [RelayCommand]

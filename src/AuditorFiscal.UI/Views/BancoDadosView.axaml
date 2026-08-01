@@ -37,7 +37,6 @@
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <Button Content="Exportar PDF" Command="{Binding ExportarPdfCommand}" />
                 <Button Content="Exportar Excel" Command="{Binding ExportarExcelCommand}" />
-                <Button Content="Imprimir" Command="{Binding ImprimirRelatorioCommand}" />
             </StackPanel>
         </Grid>
 
@@ -132,7 +131,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="entities:TimelineEvento">
                                     <StackPanel Margin="0,0,0,8">
-                                        <TextBlock Text="{Binding OcorridoEm, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                        <TextBlock Text="{Binding OcorridoEm.LocalDateTime, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
                                                    FontSize="10" Opacity="0.6" />
                                         <TextBlock Text="{Binding Descricao}" FontSize="12" TextWrapping="Wrap" />
                                     </StackPanel>

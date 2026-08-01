@@ -20,7 +20,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     private readonly IDialogService _dialogs;
     private readonly IPdfExportService _pdfExport;
     private readonly IExcelExportService _excelExport;
-    private readonly IPrintService _printService;
     private readonly IFileDialogService _fileDialog;
 
     /// <summary>Evita uma consulta ao banco a cada tecla digitada na busca.</summary>
@@ -56,7 +55,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         IDialogService dialogs,
         IPdfExportService pdfExport,
         IExcelExportService excelExport,
-        IPrintService printService,
         IFileDialogService fileDialog)
     {
         _ordemServicoService = ordemServicoService;
@@ -64,7 +62,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         _dialogs = dialogs;
         _pdfExport = pdfExport;
         _excelExport = excelExport;
-        _printService = printService;
         _fileDialog = fileDialog;
 
         _debounceBusca = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
@@ -220,23 +217,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
 
         await _excelExport.ExportarAsync(MontarTituloRelatorio(), Resultados.ToList(), destino);
         MensagemStatus = "Planilha Excel exportada.";
-    }
-
-    [RelayCommand]
-    private async Task ImprimirRelatorioAsync()
-    {
-        if (Resultados.Count == 0)
-            return;
-
-        try
-        {
-            await _printService.ImprimirRelatorioAsync(MontarTituloRelatorio(), Resultados.ToList());
-            MensagemStatus = "Relatório enviado para a impressora.";
-        }
-        catch (Exception excecao)
-        {
-            MensagemStatus = $"Falha ao imprimir: {excecao.Message}";
-        }
     }
 
     [RelayCommand]
