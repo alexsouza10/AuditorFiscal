@@ -1,6 +1,31 @@
 @echo off
 setlocal
 
+if not exist "%~dp0confiar-neste-certificado.cer" (
+    echo.
+    echo ERRO: nao encontrei o arquivo "confiar-neste-certificado.cer" nesta pasta.
+    echo.
+    echo Isso costuma acontecer quando este .cmd e executado direto de dentro do
+    echo arquivo .zip, sem extrair primeiro ^(o Windows roda so este arquivo isolado
+    echo numa pasta temporaria, sem os arquivos vizinhos^).
+    echo.
+    echo Corrija assim: feche esta janela, clique com o botao direito no arquivo
+    echo .zip que voce baixou, escolha "Extrair Tudo..." e rode o
+    echo "Instalar e Abrir.cmd" de dentro da pasta que foi extraida.
+    echo.
+    pause
+    exit /b 1
+)
+
+if not exist "%~dp0AuditorFiscal.exe" (
+    echo.
+    echo ERRO: nao encontrei o arquivo "AuditorFiscal.exe" nesta pasta. Extraia o
+    echo .zip inteiro para uma pasta antes de rodar este instalador.
+    echo.
+    pause
+    exit /b 1
+)
+
 echo Instalando certificado de confianca (necessario so na primeira vez nesta maquina)...
 echo Se aparecer uma caixa de seguranca do Windows perguntando se confia no certificado
 echo "APURA Fiscal (autoassinado)", clique em SIM/YES para instalar automaticamente.

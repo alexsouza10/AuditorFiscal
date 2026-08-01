@@ -81,6 +81,11 @@ Copy-Item -Path $caminhoInstalador -Destination $PastaPublicacao -Force
 
 $leiaMe = Join-Path $PastaPublicacao "LEIA-ME - evitar aviso do Windows.txt"
 Set-Content -Path $leiaMe -Encoding UTF8 -Value @"
+IMPORTANTE: extraia o .zip inteiro para uma pasta antes de rodar qualquer coisa
+(botão direito no .zip -> "Extrair Tudo..."). Rodar os arquivos direto de dentro do
+.zip, sem extrair, faz o Windows executá-los isolados, sem os arquivos vizinhos, e
+o instalador abaixo não vai encontrar o certificado.
+
 O Windows pode avisar "Editor desconhecido" ou que o SmartScreen impediu o início de
 um aplicativo não reconhecido ao abrir o AuditorFiscal.exe pela primeira vez nesta
 máquina. Isso é esperado (o app usa um certificado autoassinado, não um pago) — três
