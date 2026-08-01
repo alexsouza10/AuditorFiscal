@@ -14,6 +14,13 @@
     silenciosamente, em um build dependente do runtime instalado na máquina do auditor.
     Sem trimming: Avalonia (XAML/reflection) e EF Core não são totalmente
     trim-safe: cortar assemblies arriscaria quebrar o app em produção.
+
+    IncludeAllContentForSelfExtract fica de fora de propósito: com ele ligado, o .NET
+    extrai o pacote inteiro (DLLs gerenciadas, recursos, ~300MB) para uma pasta temp no
+    disco na primeira abertura de cada build — é isso que causava a demora e o pico de
+    CPU/disco só na primeira vez que o app era aberto após publicar. Só as bibliotecas
+    nativas (Skia, HarfBuzz, SQLite) PRECISAM ser extraídas para arquivo — o resto o
+    runtime lê direto de dentro do executável, sem esse custo inicial.
   -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
     <SelfContained>true</SelfContained>
@@ -21,7 +28,6 @@
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>

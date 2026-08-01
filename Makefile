@@ -83,12 +83,19 @@ tag:
 	git push origin "$$NEW_TAG"; \
 	echo "Tag $$NEW_TAG criada e publicada em origin. Rode 'make release' para gerar o instalável."
 
+# -p:RestoreConfigFile (usado em "release" abaixo) força o NuGet a usar só o
+# NuGet.Config do repo, sem tentar mesclar com os configs globais da máquina/usuário.
+# Em algumas instalações do Windows um desses arquivos globais (ex.:
+# FallbackLocation.config da Visual Studio, em "Program Files (x86)\NuGet\Config")
+# fica com permissão bloqueada para o usuário atual, e isso derruba a restauração
+# mesmo sem ter nada a ver com este projeto.
 release:
 	@echo "Publicando Auditor Fiscal versão $(VERSION)..."
 	dotnet publish $(APP_PROJECT) \
 		-c Release \
 		-r $(RUNTIME) \
 		-p:Version=$(VERSION) \
+		-p:RestoreConfigFile=NuGet.Config \
 		-o "$(PUBLISH_DIR)"
 	@echo "Empacotando (sem .pdb/.db — o executável single-file já contém tudo que é necessário; o banco do auditor mora em %LOCALAPPDATA%, fora do projeto, e nunca deveria estar aqui, mas a exclusão fica como cinto de segurança)..."
 	powershell -NoProfile -ExecutionPolicy Bypass -Command \
