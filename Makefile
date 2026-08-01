@@ -17,6 +17,12 @@
 # A versão vem de "git describe --tags". "release"/"publish" NUNCA criam tag nova —
 # eles só empacotam o que já existe. Quem cria a tag é "make tag" (chamado
 # internamente por "make deploy").
+#
+# "release" também assina o .exe com um certificado autoassinado (gerado uma vez e
+# reaproveitado depois — ver scripts/assinar-executavel.ps1) e inclui no .zip o
+# certificado público (.cer) e um LEIA-ME explicando como confiar nele. Sem isso, o
+# Windows SmartScreen bloqueia o app em qualquer máquina que não seja a de quem
+# publicou, com "Editor desconhecido".
 
 # Força o Git Bash como shell das receitas, não importa de onde "make" foi chamado
 # (PowerShell e cmd.exe usam cmd.exe por padrão, que não entende $$, cut, ${VAR#...} etc.
@@ -97,6 +103,10 @@ release:
 		-p:Version=$(VERSION) \
 		-p:RestoreConfigFile=NuGet.Config \
 		-o "$(PUBLISH_DIR)"
+	@echo "Assinando o executável (certificado autoassinado — ver scripts/assinar-executavel.ps1)..."
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/assinar-executavel.ps1 \
+		-CaminhoExecutavel "$(PUBLISH_DIR)/AuditorFiscal.exe" \
+		-PastaPublicacao "$(PUBLISH_DIR)"
 	@echo "Empacotando (sem .pdb/.db — o executável single-file já contém tudo que é necessário; o banco do auditor mora em %LOCALAPPDATA%, fora do projeto, e nunca deveria estar aqui, mas a exclusão fica como cinto de segurança)..."
 	powershell -NoProfile -ExecutionPolicy Bypass -Command \
 		"Compress-Archive -Path (Get-ChildItem '$(PUBLISH_DIR)' -Exclude '*.pdb','*.db','*.db-wal','*.db-shm').FullName -DestinationPath '$(ZIP_FILE)' -Force"
