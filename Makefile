@@ -36,6 +36,7 @@ SHELL := C:/Program Files/Git/bin/bash.exe
 endif
 
 APP_PROJECT := src/AuditorFiscal.UI/AuditorFiscal.UI.csproj
+EXE_NAME    := Apura Fiscal.exe
 RUNTIME     := win-x64
 DIST_DIR    := dist
 
@@ -45,7 +46,7 @@ DIST_DIR    := dist
 GIT_DESCRIBE := $(shell git describe --tags 2>/dev/null)
 VERSION      := $(if $(GIT_DESCRIBE),$(patsubst v%,%,$(GIT_DESCRIBE)),0.0.0-dev)
 PUBLISH_DIR  := $(DIST_DIR)/$(VERSION)
-ZIP_FILE     := $(DIST_DIR)/AuditorFiscal-$(VERSION)-$(RUNTIME).zip
+ZIP_FILE     := $(DIST_DIR)/Apura-Fiscal-$(VERSION)-$(RUNTIME).zip
 
 # Permite "make deploy 1.2.3.4" ou "make tag 1.2.3.4": a palavra extra vira a versão a
 # taguear em vez de o make tentar (e falhar) achar uma receita chamada "1.2.3.4". Sem
@@ -108,7 +109,7 @@ release:
 		-o "$(PUBLISH_DIR)"
 	@echo "Assinando o executável (certificado autoassinado — ver scripts/assinar-executavel.ps1)..."
 	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/assinar-executavel.ps1 \
-		-CaminhoExecutavel "$(PUBLISH_DIR)/AuditorFiscal.exe" \
+		-CaminhoExecutavel "$(PUBLISH_DIR)/$(EXE_NAME)" \
 		-PastaPublicacao "$(PUBLISH_DIR)"
 	@echo "Empacotando (sem .pdb/.db — o executável single-file já contém tudo que é necessário; o banco do auditor mora em %LOCALAPPDATA%, fora do projeto, e nunca deveria estar aqui, mas a exclusão fica como cinto de segurança)..."
 	powershell -NoProfile -ExecutionPolicy Bypass -Command \

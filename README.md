@@ -124,7 +124,7 @@ cuida de tudo:
 | Comando        | O que faz |
 |----------------|-----------|
 | `make tag`     | Cria a próxima tag (bump de *minor*: `v0.1.0` → `v0.2.0`, e assim por diante) e já publica ela em `origin`. Sem nenhuma tag ainda, a primeira criada é `v0.1.0`. |
-| `make release` | Publica o executável único (`win-x64`, self-contained) usando a última tag como versão, e empacota tudo em `dist/AuditorFiscal-<versão>-win-x64.zip`, pronto para enviar. |
+| `make release` | Publica o executável único (`win-x64`, self-contained) usando a última tag como versão, e empacota tudo em `dist/Apura-Fiscal-<versão>-win-x64.zip`, pronto para enviar. |
 | `make version` | Só mostra qual versão seria usada, sem publicar nada. |
 | `make clean`   | Apaga a pasta `dist/`. |
 
@@ -132,11 +132,11 @@ Fluxo típico para lançar uma nova versão:
 
 ```bash
 make tag       # cria e publica a tag v0.X.0
-make release   # gera dist/AuditorFiscal-v0.X.0-win-x64.zip
+make release   # gera dist/Apura-Fiscal-v0.X.0-win-x64.zip
 ```
 
 O arquivo `.zip` gerado é **tudo** que uma pessoa precisa: ela extrai e roda
-`AuditorFiscal.exe` diretamente — não existe instalador, e a máquina dela não precisa ter
+`Apura Fiscal.exe` diretamente — não existe instalador, e a máquina dela não precisa ter
 o .NET instalado (o runtime já vai embutido no executável). A versão publicada aparece
 no canto inferior direito da tela inicial do próprio app.
 

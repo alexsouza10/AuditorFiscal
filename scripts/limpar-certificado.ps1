@@ -10,15 +10,15 @@
     - O certificado do repositório de confiança (Cert:\CurrentUser\Root), que é o que
       faz o Windows parar de mostrar "Editor desconhecido".
     - O marcador de "já tentei confiar" (%LOCALAPPDATA%\AuditorFiscal\config), que faz
-      o AuditorFiscal.exe pular a tentativa de auto-confiança em aberturas seguintes.
+      o Apura Fiscal.exe pular a tentativa de auto-confiança em aberturas seguintes.
 
     Depois disso, tanto "make release" (gera um certificado novo) quanto abrir o
-    AuditorFiscal.exe direto (tenta se auto-confiar de novo, mostrando a caixa nativa
+    Apura Fiscal.exe direto (tenta se auto-confiar de novo, mostrando a caixa nativa
     do Windows) voltam a se comportar como numa máquina que nunca viu o app.
 #>
 [CmdletBinding()]
 param(
-    [string]$AssuntoCertificado = "CN=APURA Fiscal (autoassinado)"
+    [string]$AssuntoCertificado = "CN=Apura Fiscal (autoassinado)"
 )
 
 $ErrorActionPreference = "Stop"
@@ -55,5 +55,5 @@ if (Test-Path $caminhoMarcador) {
 
 Write-Host ""
 Write-Host "Pronto. Esta máquina agora se comporta como se nunca tivesse visto o certificado."
-Write-Host "Rode 'make release' para gerar um certificado novo, ou abra um AuditorFiscal.exe"
+Write-Host "Rode 'make release' para gerar um certificado novo, ou abra um Apura Fiscal.exe"
 Write-Host "já publicado para ver a caixa de confiança do Windows aparecer de novo."

@@ -3,7 +3,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <AssemblyName>AuditorFiscal</AssemblyName>
+    <AssemblyName>Apura Fiscal</AssemblyName>
     <RootNamespace>AuditorFiscal.UI</RootNamespace>
     <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
   </PropertyGroup>

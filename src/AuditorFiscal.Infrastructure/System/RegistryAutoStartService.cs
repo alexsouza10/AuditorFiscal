@@ -10,7 +10,7 @@ namespace AuditorFiscal.Infrastructure.System;
 public class RegistryAutoStartService : IAutoStartService
 {
     private const string CaminhoChave = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string NomeValor = "AuditorFiscal";
+    private const string NomeValor = "Apura Fiscal";
 
     public bool EstaHabilitado()
     {

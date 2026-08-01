@@ -7,7 +7,7 @@
         x:Class="AuditorFiscal.UI.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/app-icon.ico"
-        Title="APURA"
+        Title="Apura Fiscal"
         Width="1200" Height="740"
         MinWidth="900" MinHeight="600">
 
@@ -25,7 +25,7 @@
         <Border DockPanel.Dock="Top" Padding="14,8" BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <TextBlock Grid.Column="0" Text="🛡 APURA" FontWeight="SemiBold"
+                <TextBlock Grid.Column="0" Text="🛡 Apura Fiscal" FontWeight="SemiBold"
                            VerticalAlignment="Center" Opacity="0.85" />
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
