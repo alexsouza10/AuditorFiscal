@@ -100,6 +100,15 @@ public partial class App : global::Avalonia.Application
         using var escopo = _host!.Services.CreateScope();
         var contexto = escopo.ServiceProvider.GetRequiredService<AuditorFiscalDbContext>();
         contexto.Database.Migrate();
+
+        // Trocar de "wal" para "delete" exige acesso exclusivo ao banco — só garantido
+        // aqui, no único momento em que nenhuma outra conexão do app ainda foi aberta.
+        // Sem isso, um backup feito logo após uma alteração podia não refletir essa
+        // alteração: em modo WAL, o commit vai primeiro para o arquivo .db-wal e só é
+        // mesclado no .db principal (o único arquivo que o backup empacota) depois —
+        // às vezes bem depois. Rodar isso a cada início do app também corrige bancos
+        // restaurados de um backup antigo que ainda estivesse em modo WAL.
+        contexto.Database.ExecuteSqlRaw("PRAGMA journal_mode=DELETE;");
     }
 
     /// <summary>

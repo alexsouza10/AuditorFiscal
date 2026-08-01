@@ -160,17 +160,17 @@ desenvolvimento) — é assim que qualquer `dotnet build`/`dotnet run` local apa
 - Para restaurar: Configurações → **"Restaurar backup…"** → escolha o arquivo `.afbkp`.
   Antes de qualquer coisa ser agendada, o app pergunta explicitamente:
 
-  > *"Todos os dados atuais serão substituídos pelo conteúdo do backup na próxima vez que
-  > o aplicativo for aberto. Um backup de segurança do estado atual será criado antes.
-  > Continuar?"*
+  > *"Todos os dados atuais serão substituídos pelo conteúdo do backup, sem volta. O
+  > aplicativo vai fechar e abrir sozinho para concluir — não é preciso fazer isso
+  > manualmente. Continuar?"*
 
   A restauração **não acontece na hora** — o banco atual está aberto enquanto o app roda,
-  então sobrescrevê-lo nesse momento não é seguro. Em vez disso, ela fica agendada e só é
-  aplicada da próxima vez que o aplicativo é iniciado (antes de qualquer tela abrir), quando
-  o arquivo do banco está livre para ser trocado. Por isso é preciso **fechar e abrir o
-  aplicativo de novo** depois de confirmar a restauração — sem isso, ela não se completa.
-  Nesse momento o estado atual também é salvo automaticamente como um backup de segurança
-  (`pre-restauracao-*.afbkp`), então dá para voltar atrás se necessário.
+  então sobrescrevê-lo nesse momento não é seguro. Em vez disso, ela fica agendada e o
+  próprio aplicativo se reinicia sozinho para aplicá-la (antes de qualquer tela abrir,
+  quando o arquivo do banco está livre para ser trocado) — você não precisa fechar e abrir
+  manualmente. Como essa restauração substitui os dados atuais sem criar nenhum backup
+  automático do que havia antes, vale criar um backup manual primeiro se quiser poder
+  voltar atrás.
 
 ## Segurança
 

@@ -117,9 +117,9 @@ public partial class ConfiguracoesViewModel : ViewModelBase
             return;
 
         if (!await _dialogs.ConfirmarAsync("Restaurar backup",
-                "Todos os dados atuais serão substituídos pelo conteúdo do backup. O aplicativo vai fechar e " +
-                "abrir sozinho para concluir — não é preciso fazer isso manualmente. Um backup de segurança " +
-                "do estado atual será criado antes. Continuar?", "Restaurar"))
+                "Todos os dados atuais serão substituídos pelo conteúdo do backup, sem volta. O aplicativo vai " +
+                "fechar e abrir sozinho para concluir — não é preciso fazer isso manualmente. Continuar?",
+                "Restaurar"))
             return;
 
         ProcessandoBackup = true;
