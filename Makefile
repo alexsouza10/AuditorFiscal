@@ -13,16 +13,19 @@
 #   make tag        # só cria e publica a tag (aceita "make tag 1.2.3.4" também), sem
 #                    # gerar o pacote
 #   make clean      # apaga dist/
+#   make limpar-certificado  # remove o certificado desta máquina (My e Root) e o
+#                    # marcador de confiança do app, simulando uma máquina nova para
+#                    # testar o fluxo de primeira execução do zero
 #
 # A versão vem de "git describe --tags". "release"/"publish" NUNCA criam tag nova —
 # eles só empacotam o que já existe. Quem cria a tag é "make tag" (chamado
 # internamente por "make deploy").
 #
 # "release" também assina o .exe com um certificado autoassinado (gerado uma vez e
-# reaproveitado depois — ver scripts/assinar-executavel.ps1) e inclui no .zip o
-# certificado público (.cer) e um LEIA-ME explicando como confiar nele. Sem isso, o
-# Windows SmartScreen bloqueia o app em qualquer máquina que não seja a de quem
-# publicou, com "Editor desconhecido".
+# reaproveitado depois — ver scripts/assinar-executavel.ps1). O próprio .exe, na
+# primeira execução em cada máquina, tenta se autoconfiar usando essa mesma
+# assinatura (ver Program.cs, ConfiarNoProprioCertificadoSeNecessario) — por isso o
+# .zip final só precisa levar o executável, nada mais.
 
 # Força o Git Bash como shell das receitas, não importa de onde "make" foi chamado
 # (PowerShell e cmd.exe usam cmd.exe por padrão, que não entende $$, cut, ${VAR#...} etc.
@@ -57,7 +60,7 @@ endif
 # variável de ambiente dentro da receita — só como variável do Make.
 DEPLOY_TAG := v$(patsubst v%,%,$(DEPLOY_VERSION))
 
-.PHONY: all release clean version tag deploy publish
+.PHONY: all release clean version tag deploy publish limpar-certificado
 
 all: release
 publish: release
@@ -114,6 +117,12 @@ release:
 
 clean:
 	@:; rm -rf $(DIST_DIR)
+
+# Desfaz o "reconhecimento" do certificado nesta máquina (ver scripts/limpar-certificado.ps1)
+# — útil para testar do zero o fluxo de primeira execução (caixa de confiança do
+# Windows, auto-instalação pelo próprio .exe) sem precisar de uma máquina de verdade.
+limpar-certificado:
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/limpar-certificado.ps1
 
 # Combina "tag" + "release" num comando só (aceita "make deploy 1.2.3.4" para uma
 # versão exata, ou "make deploy" sozinho para bump automático — ver "tag" acima).
