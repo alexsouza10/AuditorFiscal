@@ -5,6 +5,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>AuditorFiscal</AssemblyName>
     <RootNamespace>AuditorFiscal.UI</RootNamespace>
+    <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!--

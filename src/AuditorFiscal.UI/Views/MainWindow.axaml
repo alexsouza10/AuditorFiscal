@@ -6,8 +6,8 @@
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="740"
         x:Class="AuditorFiscal.UI.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Auditor Fiscal"
+        Icon="/Assets/app-icon.ico"
+        Title="APURA"
         Width="1200" Height="740"
         MinWidth="900" MinHeight="600">
 
@@ -25,7 +25,7 @@
         <Border DockPanel.Dock="Top" Padding="14,8" BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <TextBlock Grid.Column="0" Text="Auditor Fiscal" FontWeight="SemiBold"
+                <TextBlock Grid.Column="0" Text="🛡 APURA" FontWeight="SemiBold"
                            VerticalAlignment="Center" Opacity="0.85" />
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
