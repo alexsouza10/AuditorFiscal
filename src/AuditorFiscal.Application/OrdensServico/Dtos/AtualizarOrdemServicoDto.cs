@@ -4,6 +4,7 @@ namespace AuditorFiscal.Application.OrdensServico.Dtos;
 
 public sealed record AtualizarOrdemServicoDto(
     Guid Id,
+    string Numero,
     string Empresa,
     string Cnpj,
     string Endereco,

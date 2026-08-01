@@ -78,7 +78,7 @@
                     <Grid ColumnDefinitions="*,16,*">
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="O.S. N°" Classes="fieldLabel" />
-                            <TextBox Text="{Binding Numero}" IsEnabled="{Binding IsNovo}" />
+                            <TextBox Text="{Binding Numero}" PlaceholderText="{Binding NumeroPlaceholder}" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Situação" Classes="fieldLabel" />

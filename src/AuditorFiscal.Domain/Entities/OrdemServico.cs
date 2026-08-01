@@ -109,6 +109,7 @@ public class OrdemServico : EntidadeBase
     }
 
     public void AtualizarDados(
+        string numero,
         string empresa,
         Cnpj cnpj,
         string endereco,
@@ -129,6 +130,7 @@ public class OrdemServico : EntidadeBase
         // Sem essa checagem, o auto-save do formulário reenviava os mesmos dados a cada
         // poucos segundos e lotava o histórico com entradas idênticas de "atualizado".
         var alteracoes = new List<string>();
+        RegistrarSeMudou(alteracoes, "O.S. N°", Numero, numero);
         RegistrarSeMudou(alteracoes, "Empresa", Empresa, empresa);
         RegistrarSeMudou(alteracoes, "CNPJ", Cnpj.Formatado(), cnpj.Formatado());
         RegistrarSeMudou(alteracoes, "Endereço", Endereco, endereco);
@@ -149,6 +151,7 @@ public class OrdemServico : EntidadeBase
         if (alteracoes.Count == 0)
             return;
 
+        Numero = Guard.NotNullOrWhiteSpace(numero, nameof(numero));
         Empresa = Guard.NotNullOrWhiteSpace(empresa, nameof(empresa));
         Cnpj = Guard.NotNull(cnpj, nameof(cnpj));
         Endereco = Guard.NotNullOrWhiteSpace(endereco, nameof(endereco));

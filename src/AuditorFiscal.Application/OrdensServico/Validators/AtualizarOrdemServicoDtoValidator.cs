@@ -9,6 +9,7 @@ public class AtualizarOrdemServicoDtoValidator : AbstractValidator<AtualizarOrde
     public AtualizarOrdemServicoDtoValidator()
     {
         RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.Numero).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Empresa).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Cnpj).NotEmpty().Must(Cnpj.EhValido).WithMessage("CNPJ inválido.");
         RuleFor(x => x.Endereco).NotEmpty().MaximumLength(300);

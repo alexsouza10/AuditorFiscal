@@ -74,7 +74,12 @@ public class OrdemServicoService(
         if (ordemServico is null)
             return Result.Failure("Ordem de serviço não encontrada.");
 
+        if (dto.Numero != ordemServico.Numero &&
+            await unitOfWork.OrdensServico.NumeroJaExisteAsync(dto.Numero, dto.Id, ct))
+            return Result.Failure($"Já existe uma ordem de serviço com o número '{dto.Numero}'.");
+
         ordemServico.AtualizarDados(
+            dto.Numero,
             dto.Empresa,
             Cnpj.Criar(dto.Cnpj),
             dto.Endereco,

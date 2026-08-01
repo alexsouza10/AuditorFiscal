@@ -31,8 +31,14 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     private bool _sujo;
     private bool _salvando;
 
+    // Se o auditor deixar o campo "O.S. N°" em branco, cai em um desses dois: o número
+    // sugerido (nova OS) ou o número que já estava salvo (edição) — nunca fica sem número.
+    private string _numeroSugerido = string.Empty;
+    private string _numeroCarregado = string.Empty;
+
     [ObservableProperty] private bool _isNovo = true;
     [ObservableProperty] private string _numero = string.Empty;
+    [ObservableProperty] private string? _numeroPlaceholder;
     [ObservableProperty] private string _empresa = string.Empty;
     [ObservableProperty] private string _cnpj = string.Empty;
     [ObservableProperty] private string? _cep;
@@ -118,6 +124,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             _ordemServicoId = ordemServico.Id;
             IsNovo = false;
             Numero = ordemServico.Numero;
+            _numeroCarregado = ordemServico.Numero;
+            NumeroPlaceholder = $"Em branco = mantém {ordemServico.Numero}";
             Empresa = ordemServico.Empresa;
             Cnpj = ordemServico.Cnpj.Formatado();
             Endereco = ordemServico.Endereco;
@@ -171,11 +179,14 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         }
 
         var arquivos = _arquivosPendentes.ToList();
+        var numero = string.IsNullOrWhiteSpace(Numero)
+            ? (IsNovo ? _numeroSugerido : _numeroCarregado)
+            : Numero.Trim();
 
         if (IsNovo)
         {
             var dto = new CriarOrdemServicoDto(
-                Numero, Empresa, Cnpj, Endereco, Cidade, Responsavel, FiscalizacaoSelecionada,
+                numero, Empresa, Cnpj, Endereco, Cidade, Responsavel, FiscalizacaoSelecionada,
                 ParaData(RecebimentoSfit), ParaData(AberturaSfit), ParaData(DataFiscalizacao), ParaData(PrazoNad),
                 ParaData(PrazoNco), ParaData(ElaboracaoAutos), ParaData(DataFinal),
                 Observacoes, latitude, longitude, TemNcre, TemNcre ? ParaData(PrazoNcre) : null);
@@ -197,7 +208,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         else
         {
             var dto = new AtualizarOrdemServicoDto(
-                _ordemServicoId, Empresa, Cnpj, Endereco, Cidade, Responsavel, FiscalizacaoSelecionada,
+                _ordemServicoId, numero, Empresa, Cnpj, Endereco, Cidade, Responsavel, FiscalizacaoSelecionada,
                 ParaData(RecebimentoSfit), ParaData(AberturaSfit), ParaData(DataFiscalizacao), ParaData(PrazoNad),
                 ParaData(PrazoNco), ParaData(ElaboracaoAutos), ParaData(DataFinal),
                 Observacoes, latitude, longitude, TemNcre, TemNcre ? ParaData(PrazoNcre) : null);
@@ -353,8 +364,13 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         _carregando = true;
         try
         {
-            if (IsNovo && string.IsNullOrWhiteSpace(Numero))
-                Numero = await _ordemServicoService.SugerirProximoNumeroAsync();
+            if (IsNovo)
+            {
+                // Fica em branco por padrão: o auditor escolhe um número próprio ou deixa o
+                // campo vazio para usar a sugestão automática só na hora de salvar.
+                _numeroSugerido = await _ordemServicoService.SugerirProximoNumeroAsync();
+                NumeroPlaceholder = $"Em branco = usa {_numeroSugerido}";
+            }
         }
         finally
         {
@@ -426,7 +442,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
 
         if (_carregando || e.PropertyName is nameof(MensagemErro) or nameof(MensagemStatus)
             or nameof(TituloPagina) or nameof(PodeExportar) or nameof(FavoritoTexto) or nameof(AbaSelecionada)
-            or nameof(MensagemCep) or nameof(MostrarArquivos) or nameof(Cep))
+            or nameof(MensagemCep) or nameof(MostrarArquivos) or nameof(Cep) or nameof(NumeroPlaceholder))
             return;
 
         if (e.PropertyName is nameof(IsNovo) or nameof(Numero))
