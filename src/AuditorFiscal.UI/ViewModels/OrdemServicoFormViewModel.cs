@@ -37,6 +37,13 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     private string _numeroCarregado = string.Empty;
     private SituacaoOS _situacaoCarregada = SituacaoOS.EmAndamento;
 
+    // Base do Viewbox em 100% de zoom (mesmos valores usados antes de o zoom manual existir).
+    private const double ZoomViewboxLarguraBase = 1560;
+    private const double ZoomViewboxAlturaBase = 860;
+    private const double ZoomMinimo = 0.5;
+    private const double ZoomMaximo = 2.0;
+    private const double ZoomPasso = 0.1;
+
     [ObservableProperty] private bool _isNovo = true;
     [ObservableProperty] private string _numero = string.Empty;
     [ObservableProperty] private string? _numeroPlaceholder;
@@ -71,6 +78,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string? _mensagemErro;
     [ObservableProperty] private string? _mensagemStatus;
     [ObservableProperty] private int _abaSelecionada;
+    [ObservableProperty] private double _zoomNivel = 1.0;
 
     public ObservableCollection<ArquivoItemViewModel> Fotos { get; } = [];
     public ObservableCollection<ArquivoItemViewModel> Anexos { get; } = [];
@@ -111,8 +119,30 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     public string TituloPagina => IsNovo ? "Nova Ordem de Serviço" : $"Ordem de Serviço {Numero}";
     public bool PodeExportar => !IsNovo;
     public string FavoritoTexto => Favorito ? "★ Favorito" : "☆ Favorito";
+    public double ZoomViewboxLargura => ZoomViewboxLarguraBase * ZoomNivel;
+    public double ZoomViewboxAltura => ZoomViewboxAlturaBase * ZoomNivel;
+    public string ZoomTexto => $"{ZoomNivel:P0}";
 
     partial void OnFavoritoChanged(bool value) => OnPropertyChanged(nameof(FavoritoTexto));
+
+    partial void OnZoomNivelChanged(double value)
+    {
+        OnPropertyChanged(nameof(ZoomViewboxLargura));
+        OnPropertyChanged(nameof(ZoomViewboxAltura));
+        OnPropertyChanged(nameof(ZoomTexto));
+        AumentarZoomCommand.NotifyCanExecuteChanged();
+        DiminuirZoomCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(PodeAumentarZoom))]
+    private void AumentarZoom() => ZoomNivel = Math.Round(Math.Min(ZoomMaximo, ZoomNivel + ZoomPasso), 2);
+
+    private bool PodeAumentarZoom() => ZoomNivel < ZoomMaximo;
+
+    [RelayCommand(CanExecute = nameof(PodeDiminuirZoom))]
+    private void DiminuirZoom() => ZoomNivel = Math.Round(Math.Max(ZoomMinimo, ZoomNivel - ZoomPasso), 2);
+
+    private bool PodeDiminuirZoom() => ZoomNivel > ZoomMinimo;
 
     public void DefinirAgendamentoInicial(DateOnly data, TimeOnly hora)
     {
@@ -524,7 +554,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
 
         if (_carregando || e.PropertyName is nameof(MensagemErro) or nameof(MensagemStatus)
             or nameof(TituloPagina) or nameof(PodeExportar) or nameof(FavoritoTexto) or nameof(AbaSelecionada)
-            or nameof(MensagemCep) or nameof(MostrarArquivos) or nameof(Cep) or nameof(NumeroPlaceholder))
+            or nameof(MensagemCep) or nameof(MostrarArquivos) or nameof(Cep) or nameof(NumeroPlaceholder)
+            or nameof(ZoomNivel) or nameof(ZoomViewboxLargura) or nameof(ZoomViewboxAltura) or nameof(ZoomTexto))
             return;
 
         if (e.PropertyName is nameof(IsNovo) or nameof(Numero))
