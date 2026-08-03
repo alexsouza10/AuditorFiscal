@@ -85,6 +85,9 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private void LimparBusca() => FiltroTexto = null;
+
+    [RelayCommand]
     private async Task PeriodoAnteriorAsync()
     {
         _inicioJanela = _inicioJanela.AddMonths(-_mesesVisiveis);

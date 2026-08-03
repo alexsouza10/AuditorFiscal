@@ -185,8 +185,16 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         if (Selecionada is null)
             return;
 
-        EmpresaFiltro = Selecionada.Empresa;
+        // Situação/favoritos ativos escondiam parte do histórico da empresa (a busca local
+        // por empresa era aplicada por cima desses filtros). Limpamos tudo aqui para garantir
+        // o histórico completo, e paramos o debounce para uma 2ª busca disparada pelas
+        // mudanças acima não sobrescrever a mensagem de status logo em seguida.
         TermoBusca = null;
+        SituacaoFiltro = null;
+        SomenteFavoritos = false;
+        EmpresaFiltro = Selecionada.Empresa;
+
+        _debounceBusca.Stop();
         await BuscarAsync();
         MensagemStatus = $"Histórico de {EmpresaFiltro}: {Resultados.Count} auditoria(s).";
     }
@@ -221,6 +229,9 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
 
     [RelayCommand]
     private void Voltar() => _navigation.IrParaInicio();
+
+    [RelayCommand]
+    private void FecharDetalhe() => Selecionada = null;
 
     private async Task InicializarAsync()
     {

@@ -42,7 +42,7 @@
 
         <TextBlock DockPanel.Dock="Bottom" Text="{Binding MensagemStatus}" Opacity="0.7" Margin="0,10,0,0" />
 
-        <Grid ColumnDefinitions="260,*,Auto">
+        <Grid ColumnDefinitions="260,*">
 
             <!-- Filtros + dashboard -->
             <ScrollViewer Grid.Column="0" Margin="0,0,16,0">
@@ -76,71 +76,82 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- Resultados -->
-            <Border Grid.Column="1" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1" CornerRadius="8">
-                <DataGrid ItemsSource="{Binding Resultados}" SelectedItem="{Binding Selecionada}"
-                          AutoGenerateColumns="False" IsReadOnly="True"
-                          GridLinesVisibility="Horizontal" HeadersVisibility="Column"
-                          AutomationProperties.AutomationId="GridResultados">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Número" Binding="{Binding Numero}" Width="120" />
-                        <DataGridTextColumn Header="Empresa" Binding="{Binding Empresa}" Width="*" />
-                        <DataGridTextColumn Header="Cidade" Binding="{Binding Cidade}" Width="130" />
-                        <DataGridTextColumn Header="Recebimento SFIT" Binding="{Binding RecebimentoSfit, StringFormat='{}{0:dd/MM/yyyy}'}" Width="130" />
-                        <DataGridTextColumn Header="Data Final" Binding="{Binding DataFinal, StringFormat='{}{0:dd/MM/yyyy}'}" Width="110" />
-                        <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Converter={StaticResource SituacaoParaDescricao}}" Width="110" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Border>
+            <!-- Resultados + detalhe. O painel de detalhe flutua sobre a grade em vez de
+                 ocupar uma coluna própria, para que a lista nunca fique espremida em
+                 janelas estreitas e o painel sempre caiba na largura disponível. -->
+            <Grid Grid.Column="1">
+                <Border BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1" CornerRadius="8">
+                    <DataGrid ItemsSource="{Binding Resultados}" SelectedItem="{Binding Selecionada}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                              AutomationProperties.AutomationId="GridResultados">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Número" Binding="{Binding Numero}" Width="120" />
+                            <DataGridTextColumn Header="Empresa" Binding="{Binding Empresa}" Width="*" />
+                            <DataGridTextColumn Header="Cidade" Binding="{Binding Cidade}" Width="130" />
+                            <DataGridTextColumn Header="Recebimento SFIT" Binding="{Binding RecebimentoSfit, StringFormat='{}{0:dd/MM/yyyy}'}" Width="130" />
+                            <DataGridTextColumn Header="Data Final" Binding="{Binding DataFinal, StringFormat='{}{0:dd/MM/yyyy}'}" Width="110" />
+                            <DataGridTextColumn Header="Situação" Binding="{Binding Situacao, Converter={StaticResource SituacaoParaDescricao}}" Width="110" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
 
-            <!-- Detalhe -->
-            <Border Grid.Column="2" Width="300" Margin="16,0,0,0" Padding="16" CornerRadius="8"
-                    Background="{DynamicResource CartaoBrush}"
-                    BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1"
-                    IsVisible="{Binding TemSelecao}">
-                <ScrollViewer>
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{Binding Selecionada.Empresa}" FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Selecionada.Numero}" Opacity="0.7" FontSize="12" />
+                <!-- Detalhe -->
+                <Border Width="300" MaxWidth="320" Margin="16" Padding="16" CornerRadius="8"
+                        HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                        Background="{DynamicResource CartaoBrush}"
+                        BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1"
+                        BoxShadow="0 4 16 0 #40000000"
+                        IsVisible="{Binding TemSelecao}">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Top" Content="✕" HorizontalAlignment="Right" Padding="8,4"
+                                Command="{Binding FecharDetalheCommand}" ToolTip.Tip="Fechar detalhes" />
 
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="CNPJ" FontSize="11" Opacity="0.6" />
-                            <TextBlock Text="{Binding Selecionada.Cnpj}" />
-                        </StackPanel>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Endereço" FontSize="11" Opacity="0.6" />
-                            <TextBlock Text="{Binding Selecionada.Endereco}" TextWrapping="Wrap" />
-                        </StackPanel>
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Responsável" FontSize="11" Opacity="0.6" />
-                            <TextBlock Text="{Binding Selecionada.Responsavel}" />
-                        </StackPanel>
+                        <ScrollViewer>
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="{Binding Selecionada.Empresa}" FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding Selecionada.Numero}" Opacity="0.7" FontSize="12" />
 
-                        <Separator Margin="0,4" />
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="CNPJ" FontSize="11" Opacity="0.6" />
+                                    <TextBlock Text="{Binding Selecionada.Cnpj}" />
+                                </StackPanel>
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Endereço" FontSize="11" Opacity="0.6" />
+                                    <TextBlock Text="{Binding Selecionada.Endereco}" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Responsável" FontSize="11" Opacity="0.6" />
+                                    <TextBlock Text="{Binding Selecionada.Responsavel}" />
+                                </StackPanel>
 
-                        <Button Content="Abrir / Editar" Classes="accent" HorizontalAlignment="Stretch" Command="{Binding AbrirCommand}" />
-                        <Button Content="Histórico desta O.S." HorizontalAlignment="Stretch" Command="{Binding AbrirHistoricoCommand}" />
-                        <Button Content="Histórico da empresa" HorizontalAlignment="Stretch" Command="{Binding HistoricoDaEmpresaCommand}" />
-                        <Button Content="Favoritar" HorizontalAlignment="Stretch" Command="{Binding AlternarFavoritoCommand}" />
-                        <Button Content="Excluir" HorizontalAlignment="Stretch" Command="{Binding ExcluirCommand}" Foreground="#EF4444" />
+                                <Separator Margin="0,4" />
 
-                        <Separator Margin="0,4" />
+                                <Button Content="Abrir / Editar" Classes="accent" HorizontalAlignment="Stretch" Command="{Binding AbrirCommand}" />
+                                <Button Content="Histórico desta O.S." HorizontalAlignment="Stretch" Command="{Binding AbrirHistoricoCommand}" />
+                                <Button Content="Histórico da empresa" HorizontalAlignment="Stretch" Command="{Binding HistoricoDaEmpresaCommand}" />
+                                <Button Content="Favoritar" HorizontalAlignment="Stretch" Command="{Binding AlternarFavoritoCommand}" />
+                                <Button Content="Excluir" HorizontalAlignment="Stretch" Command="{Binding ExcluirCommand}" Foreground="#EF4444" />
 
-                        <TextBlock Text="Timeline da auditoria" FontWeight="SemiBold" FontSize="12" />
-                        <ItemsControl ItemsSource="{Binding TimelineSelecionada}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="entities:TimelineEvento">
-                                    <StackPanel Margin="0,0,0,8">
-                                        <TextBlock Text="{Binding OcorridoEm.LocalDateTime, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
-                                                   FontSize="10" Opacity="0.6" />
-                                        <TextBlock Text="{Binding Descricao}" FontSize="12" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
+                                <Separator Margin="0,4" />
+
+                                <TextBlock Text="Timeline da auditoria" FontWeight="SemiBold" FontSize="12" />
+                                <ItemsControl ItemsSource="{Binding TimelineSelecionada}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="entities:TimelineEvento">
+                                            <StackPanel Margin="0,0,0,8">
+                                                <TextBlock Text="{Binding OcorridoEm.LocalDateTime, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"
+                                                           FontSize="10" Opacity="0.6" />
+                                                <TextBlock Text="{Binding Descricao}" FontSize="12" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Grid>
 
         </Grid>
 
