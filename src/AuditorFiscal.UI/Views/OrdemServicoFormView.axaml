@@ -55,6 +55,12 @@
                 <TextBlock Text="{Binding TituloPagina}" Classes="pageTitle" VerticalAlignment="Center" />
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button Content="🔍−" Command="{Binding DiminuirZoomCommand}" ToolTip.Tip="Diminuir zoom"
+                        MinWidth="34" AutomationProperties.AutomationId="BtnDiminuirZoom" />
+                <TextBlock Text="{Binding ZoomTexto}" VerticalAlignment="Center" MinWidth="44"
+                           TextAlignment="Center" FontSize="12" Opacity="0.65" />
+                <Button Content="🔍+" Command="{Binding AumentarZoomCommand}" ToolTip.Tip="Aumentar zoom"
+                        MinWidth="34" AutomationProperties.AutomationId="BtnAumentarZoom" Margin="0,0,8,0" />
                 <Button Content="{Binding FavoritoTexto}" Command="{Binding AlternarFavoritoCommand}" />
                 <Button Content="Exportar PDF" Command="{Binding ExportarPdfCommand}" IsEnabled="{Binding PodeExportar}" />
                 <Button Content="Excluir" Command="{Binding ExcluirCommand}" Foreground="#EF4444" />
@@ -78,8 +84,11 @@
         <!-- Viewbox escala todo o conteúdo (campos, fontes, espaçamentos) na mesma proporção para
              sempre caber na tela sem rolagem: encolhe quando a janela é pequena e cresce junto com
              ela, até o teto de MaxWidth/MaxHeight — mais confiável que recalcular larguras à mão,
-             porque fonte e caixa nunca saem de proporção uma da outra. -->
-        <Viewbox Stretch="Uniform" StretchDirection="Both" MaxWidth="1560" MaxHeight="860"
+             porque fonte e caixa nunca saem de proporção uma da outra. Os botões de zoom (lupa)
+             movem esse teto para cima/baixo a partir da base de 1560x860 (= 100%); quando a janela
+             é menor que o teto, o encolhimento automático continua valendo normalmente. -->
+        <Viewbox Stretch="Uniform" StretchDirection="Both"
+                 MaxWidth="{Binding ZoomViewboxLargura}" MaxHeight="{Binding ZoomViewboxAltura}"
                  HorizontalAlignment="Center" VerticalAlignment="Center">
             <Grid ColumnDefinitions="Auto,Auto">
 
