@@ -8,7 +8,7 @@ public sealed record CriarOrdemServicoDto(
     string Cnpj,
     string Endereco,
     string Cidade,
-    string Responsavel,
+    string? Responsavel,
     TipoFiscalizacao Fiscalizacao,
     DateOnly RecebimentoSfit,
     DateOnly AberturaSfit,

@@ -9,12 +9,19 @@ namespace AuditorFiscal.Persistence.Repositories;
 public class OrdemServicoRepository(AuditorFiscalDbContext contexto)
     : Repository<OrdemServico>(contexto), IOrdemServicoRepository
 {
+    // AsSplitQuery: com 4 coleções (Fotos, Anexos, Timeline, Tags) incluídas, uma única
+    // query com JOINs produz um produto cartesiano entre elas — uma OS com 5 fotos, 3
+    // anexos e 20 eventos de timeline já retornaria 300 linhas para montar 1 registro.
+    // Isso piora a cada edição, já que a Timeline só cresce, tornando esse carregamento
+    // (disparado a cada Salvar) progressivamente mais lento. Split query busca cada
+    // coleção em uma query separada, sem produto cartesiano.
     private IQueryable<OrdemServico> ComDetalhes() =>
         DbSet
             .Include(x => x.Fotos)
             .Include(x => x.Anexos)
             .Include(x => x.Timeline)
-            .Include(x => x.Tags);
+            .Include(x => x.Tags)
+            .AsSplitQuery();
 
     public override async Task<OrdemServico?> ObterPorIdAsync(Guid id, CancellationToken ct = default) =>
         await ComDetalhes().FirstOrDefaultAsync(x => x.Id == id, ct);

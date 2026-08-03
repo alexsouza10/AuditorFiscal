@@ -145,8 +145,7 @@ desenvolvimento) — é assim que qualquer `dotnet build`/`dotnet run` local apa
 
 ## Backup e restauração
 
-- Todo backup (automático, ao abrir o app se a opção estiver ligada; ou manual, pelo
-  botão "Criar backup agora" em Configurações) é salvo cifrado (AES-256-GCM) na pasta:
+- Todo backup é salvo cifrado (AES-256-GCM) na pasta:
 
   ```
   %LOCALAPPDATA%\AuditorFiscal\db\
@@ -155,6 +154,12 @@ desenvolvimento) — é assim que qualquer `dotnet build`/`dotnet run` local apa
   Essa pasta guarda o banco de dados e todos os anexos num único arquivo `.afbkp` por
   backup — é o lugar para copiar/mover se você quiser levar os dados para outra máquina
   ou guardar uma cópia de segurança fora do computador.
+- Existem dois tipos de backup:
+  - **Automático** (se a opção estiver ligada em Configurações): roda sozinho ao abrir e
+    ao fechar o app, sempre gravando por cima do mesmo arquivo (`auditorfiscal-auto.afbkp`).
+    Não acumula backups antigos na pasta.
+  - **Manual**, pelo botão "Criar backup agora" em Configurações: gera um arquivo novo,
+    com data e hora no nome, preservando o histórico de backups anteriores.
 - Em Configurações → Backup existe um botão **"Abrir pasta de backups"** que já abre essa
   pasta no Explorer, e o caminho completo fica visível na tela.
 - Para restaurar: Configurações → **"Restaurar backup…"** → escolha o arquivo `.afbkp`.

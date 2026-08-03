@@ -15,6 +15,11 @@ public class ProporcaoParaPixelsConverter : IMultiValueConverter
         if (values.Count < 2 || values[0] is not double proporcao || values[1] is not double larguraReferencia)
             return 0.0;
 
-        return Math.Max(0.0, proporcao * larguraReferencia);
+        // ConverterParameter opcional: pixels reservados fora da barra (ex.: o número ao
+        // lado dela), para a barra cheia não colidir com o que vem depois.
+        var desconto = parameter is string texto && double.TryParse(texto, NumberStyles.Float, CultureInfo.InvariantCulture, out var valor)
+            ? valor : 0.0;
+
+        return Math.Max(0.0, proporcao * Math.Max(0.0, larguraReferencia - desconto));
     }
 }

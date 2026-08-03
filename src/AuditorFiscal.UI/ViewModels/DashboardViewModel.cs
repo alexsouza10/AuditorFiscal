@@ -37,6 +37,10 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
     public ObservableCollection<FatiaPizzaViewModel> PizzaSituacao { get; } = [];
     public ObservableCollection<BarraProducaoMensalViewModel> ProducaoMensal { get; } = [];
 
+    public bool SemDados => Total == 0;
+
+    partial void OnTotalChanged(int value) => OnPropertyChanged(nameof(SemDados));
+
     public DashboardViewModel(OrdemServicoService ordemServicoService, INavigationService navigation)
     {
         _ordemServicoService = ordemServicoService;
@@ -49,6 +53,9 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
 
     [RelayCommand]
     private void Voltar() => _navigation.IrParaInicio();
+
+    [RelayCommand]
+    private void NovaOrdemServico() => _navigation.NavegarPara<OrdemServicoFormViewModel>();
 
     private async Task CarregarAsync()
     {
@@ -109,7 +116,11 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
                 nome, quantidade, quantidade / (double)maximoTipo, "#6366F1"));
     }
 
-    /// <summary>Gráfico de pizza (fatias como geometria SVG) para a distribuição por situação.</summary>
+    /// <summary>
+    /// Gráfico de rosca (fatias como geometria SVG) para a distribuição por situação. O
+    /// miolo vazado sobra livre na view para mostrar o total — assim o número mais
+    /// importante do gráfico fica dentro dele, em vez de disputar espaço com a legenda.
+    /// </summary>
     private void AtualizarPizzaSituacao(IReadOnlyList<OrdemServico> todas)
     {
         PizzaSituacao.Clear();
@@ -117,7 +128,7 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
         if (todas.Count == 0)
             return;
 
-        const double cx = 90, cy = 90, raio = 88;
+        const double cx = 90, cy = 90, raioExterno = 88, raioInterno = 52;
         var anguloAcumulado = 0.0;
 
         foreach (var situacao in Enum.GetValues<SituacaoOS>())
@@ -131,7 +142,7 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
             var anguloFinal = Math.Min(anguloAcumulado + fracao * 360, anguloAcumulado + 359.999);
             anguloAcumulado += fracao * 360;
 
-            var geometria = MontarFatiaPizza(cx, cy, raio, anguloInicial, anguloFinal);
+            var geometria = MontarFatiaDonut(cx, cy, raioExterno, raioInterno, anguloInicial, anguloFinal);
             var percentual = Math.Round(fracao * 100, 1);
 
             PizzaSituacao.Add(new FatiaPizzaViewModel(
@@ -139,14 +150,18 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private static string MontarFatiaPizza(double cx, double cy, double raio, double anguloInicialGraus, double anguloFinalGraus)
+    private static string MontarFatiaDonut(
+        double cx, double cy, double raioExterno, double raioInterno, double anguloInicialGraus, double anguloFinalGraus)
     {
-        var (x0, y0) = PontoNoCirculo(cx, cy, raio, anguloInicialGraus);
-        var (x1, y1) = PontoNoCirculo(cx, cy, raio, anguloFinalGraus);
+        var (xExt0, yExt0) = PontoNoCirculo(cx, cy, raioExterno, anguloInicialGraus);
+        var (xExt1, yExt1) = PontoNoCirculo(cx, cy, raioExterno, anguloFinalGraus);
+        var (xInt1, yInt1) = PontoNoCirculo(cx, cy, raioInterno, anguloFinalGraus);
+        var (xInt0, yInt0) = PontoNoCirculo(cx, cy, raioInterno, anguloInicialGraus);
         var arcoGrande = anguloFinalGraus - anguloInicialGraus > 180 ? 1 : 0;
 
         return string.Create(CultureInfo.InvariantCulture,
-            $"M {cx},{cy} L {x0:F2},{y0:F2} A {raio},{raio} 0 {arcoGrande} 1 {x1:F2},{y1:F2} Z");
+            $"M {xExt0:F2},{yExt0:F2} A {raioExterno},{raioExterno} 0 {arcoGrande} 1 {xExt1:F2},{yExt1:F2} " +
+            $"L {xInt1:F2},{yInt1:F2} A {raioInterno},{raioInterno} 0 {arcoGrande} 0 {xInt0:F2},{yInt0:F2} Z");
     }
 
     private static (double X, double Y) PontoNoCirculo(double cx, double cy, double raio, double anguloGraus)

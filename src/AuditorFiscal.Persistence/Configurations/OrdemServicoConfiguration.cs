@@ -16,7 +16,7 @@ public class OrdemServicoConfiguration : IEntityTypeConfiguration<OrdemServico>
         builder.Property(x => x.Empresa).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Endereco).HasMaxLength(300).IsRequired();
         builder.Property(x => x.Cidade).HasMaxLength(150).IsRequired();
-        builder.Property(x => x.Responsavel).HasMaxLength(150).IsRequired();
+        builder.Property(x => x.Responsavel).HasMaxLength(150);
         builder.Property(x => x.Observacoes).HasMaxLength(4000);
         builder.Property(x => x.HashIntegridade).HasMaxLength(64);
         builder.Property(x => x.Situacao).HasConversion<string>().HasMaxLength(30);

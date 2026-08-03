@@ -35,6 +35,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     // sugerido (nova OS) ou o número que já estava salvo (edição) — nunca fica sem número.
     private string _numeroSugerido = string.Empty;
     private string _numeroCarregado = string.Empty;
+    private SituacaoOS _situacaoCarregada = SituacaoOS.EmAndamento;
 
     [ObservableProperty] private bool _isNovo = true;
     [ObservableProperty] private string _numero = string.Empty;
@@ -94,9 +95,15 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         _pdfExport = pdfExport;
         _cepLookup = cepLookup;
 
-        _autoSaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
-        _autoSaveTimer.Tick += async (_, _) => await SalvarAutomaticamenteAsync();
-        _autoSaveTimer.Start();
+        // Debounce (reinicia a cada edição, ver OnPropertyChanged) em vez de varredura
+        // periódica: sem isso, uma alteração feita logo após um "tick" só era salva —
+        // e só refletia no cronograma GANTT — até 5s depois, mesmo já estando ocioso.
+        _autoSaveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _autoSaveTimer.Tick += async (_, _) =>
+        {
+            _autoSaveTimer.Stop();
+            await SalvarAutomaticamenteAsync();
+        };
 
         _ = InicializarAsync();
     }
@@ -130,7 +137,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             Cnpj = ordemServico.Cnpj.Formatado();
             Endereco = ordemServico.Endereco;
             Cidade = ordemServico.Cidade;
-            Responsavel = ordemServico.Responsavel;
+            Responsavel = ordemServico.Responsavel ?? string.Empty;
             FiscalizacaoSelecionada = ordemServico.Fiscalizacao;
             RecebimentoSfit = ordemServico.RecebimentoSfit.ToDateTime(TimeOnly.MinValue);
             AberturaSfit = ordemServico.AberturaSfit.ToDateTime(TimeOnly.MinValue);
@@ -143,6 +150,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             LatitudeTexto = ordemServico.Coordenada?.Latitude.ToString("F6", CultureInfo.InvariantCulture);
             LongitudeTexto = ordemServico.Coordenada?.Longitude.ToString("F6", CultureInfo.InvariantCulture);
             SituacaoSelecionada = ordemServico.Situacao;
+            _situacaoCarregada = ordemServico.Situacao;
             Favorito = ordemServico.Favorito;
             TemNcre = ordemServico.TemNcre;
             PrazoNcre = ordemServico.PrazoNcre?.ToDateTime(TimeOnly.MinValue);
@@ -162,20 +170,29 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
-    private async Task SalvarAsync()
+    private async Task SalvarAsync() => await SalvarInternoAsync();
+
+    [RelayCommand]
+    private async Task SalvarECriarNovaAsync()
+    {
+        if (await SalvarInternoAsync())
+            await LimparParaNovaAsync();
+    }
+
+    private async Task<bool> SalvarInternoAsync()
     {
         MensagemErro = null;
 
         if (!DatasObrigatoriasPreenchidas())
         {
             MensagemErro = "Preencha todas as datas do fluxo SFIT antes de salvar.";
-            return;
+            return false;
         }
 
         if (!TryConverterCoordenadas(out var latitude, out var longitude))
         {
             MensagemErro = "Latitude/Longitude inválidas.";
-            return;
+            return false;
         }
 
         var arquivos = _arquivosPendentes.ToList();
@@ -195,7 +212,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             if (!resultado.IsSuccess)
             {
                 MensagemErro = resultado.Error;
-                return;
+                return false;
             }
 
             _ordemServicoId = resultado.Value;
@@ -217,17 +234,75 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             if (!resultado.IsSuccess)
             {
                 MensagemErro = resultado.Error;
-                return;
+                return false;
             }
 
             _arquivosPendentes.Clear();
-            await _ordemServicoService.AlterarSituacaoAsync(_ordemServicoId, SituacaoSelecionada);
+
+            // Só dispara a chamada (recarrega a entidade inteira e grava de novo) quando a
+            // situação realmente mudou — antes isso rodava em todo Salvar, dobrando o custo
+            // de cada gravação à toa.
+            if (SituacaoSelecionada != _situacaoCarregada)
+                await _ordemServicoService.AlterarSituacaoAsync(_ordemServicoId, SituacaoSelecionada);
         }
 
         _sujo = false;
         MensagemStatus = $"Salvo às {DateTime.Now:HH:mm:ss}";
         await CarregarParaEdicaoAsync(_ordemServicoId);
         WeakReferenceMessenger.Default.Send(new OrdemServicoAlteradaMessage());
+        return true;
+    }
+
+    /// <summary>Reseta o formulário para um novo cadastro logo após salvar, poupando o auditor de
+    /// voltar à tela inicial quando precisa lançar várias O.S. em sequência.</summary>
+    private async Task LimparParaNovaAsync()
+    {
+        _carregando = true;
+        try
+        {
+            _ordemServicoId = Guid.Empty;
+            IsNovo = true;
+            Numero = string.Empty;
+            _numeroCarregado = string.Empty;
+            Empresa = string.Empty;
+            Cnpj = string.Empty;
+            Cep = null;
+            MensagemCep = null;
+            Endereco = string.Empty;
+            Cidade = string.Empty;
+            Responsavel = string.Empty;
+            FiscalizacaoSelecionada = TipoFiscalizacao.Direta;
+            RecebimentoSfit = null;
+            AberturaSfit = null;
+            DataFiscalizacao = null;
+            PrazoNad = null;
+            PrazoNco = null;
+            ElaboracaoAutos = null;
+            DataFinal = null;
+            Observacoes = null;
+            LatitudeTexto = null;
+            LongitudeTexto = null;
+            SituacaoSelecionada = SituacaoOS.EmAndamento;
+            Favorito = false;
+            TemNcre = false;
+            PrazoNcre = null;
+            MostrarArquivos = false;
+
+            _arquivosPendentes.Clear();
+            Fotos.Clear();
+            Anexos.Clear();
+            Timeline.Clear();
+
+            _numeroSugerido = await _ordemServicoService.SugerirProximoNumeroAsync();
+            NumeroPlaceholder = $"Em branco = usa {_numeroSugerido}";
+            MensagemStatus = "Ordem de serviço salva. Formulário pronto para uma nova.";
+        }
+        finally
+        {
+            _carregando = false;
+            _sujo = false;
+            NotificarCabecalho();
+        }
     }
 
     [RelayCommand]
@@ -335,7 +410,14 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
-    private void Voltar() => _navigation.Voltar();
+    private async Task Voltar()
+    {
+        // Flush do autosave pendente: sem isso, sair da tela logo após uma edição podia
+        // perder a alteração (timer é parado no Dispose) ou deixar o GANTT desatualizado
+        // até a próxima vez que essa OS fosse salva.
+        await SalvarAutomaticamenteAsync();
+        _navigation.Voltar();
+    }
 
     private void AdicionarPendente(NovoArquivoDto arquivo)
     {
@@ -449,6 +531,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             NotificarCabecalho();
 
         _sujo = true;
+        _autoSaveTimer.Stop();
+        _autoSaveTimer.Start();
     }
 
     public void Dispose() => _autoSaveTimer.Stop();

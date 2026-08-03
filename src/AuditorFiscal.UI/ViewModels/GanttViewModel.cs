@@ -64,9 +64,7 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         _pdfExport = pdfExport;
         _fileDialog = fileDialog;
 
-        var inicioMesAtual = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1);
-        _inicioJanela = inicioMesAtual.AddMonths(-1);
-        _fimJanela = inicioMesAtual.AddMonths(_mesesVisiveis - 1).AddMonths(1).AddDays(-1);
+        CentralizarJanelaNoMesAtual(_mesesVisiveis);
 
         _debounceBusca = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
         _debounceBusca.Tick += async (_, _) =>
@@ -105,13 +103,11 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task HojeAsync()
     {
-        var inicioMesAtual = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1);
-        _inicioJanela = inicioMesAtual.AddMonths(-1);
-        _fimJanela = inicioMesAtual.AddMonths(_mesesVisiveis - 1).AddMonths(1).AddDays(-1);
+        CentralizarJanelaNoMesAtual(_mesesVisiveis);
         await CarregarAsync();
     }
 
-    /// <summary>Botões de período rápido (3/6/12 meses) — janela recomeça a partir do mês atual.</summary>
+    /// <summary>Botões de período rápido (3/6/12 meses) — janela recentraliza no mês atual.</summary>
     [RelayCommand]
     private async Task DefinirPeriodoAsync(string mesesTexto)
     {
@@ -121,10 +117,18 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         FiltroInicio = null;
         FiltroFim = null;
 
-        var inicioMesAtual = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1);
-        _inicioJanela = inicioMesAtual;
-        _fimJanela = inicioMesAtual.AddMonths(meses).AddDays(-1);
+        CentralizarJanelaNoMesAtual(meses);
         await CarregarAsync();
+    }
+
+    /// <summary>Deixa o mês atual (e a linha tracejada de "hoje") aproximadamente no centro da
+    /// janela visível, em vez de perto da borda esquerda — evita que o auditor precise navegar
+    /// para enxergar o cronograma ao redor da data de hoje assim que abre o Gantt.</summary>
+    private void CentralizarJanelaNoMesAtual(int meses)
+    {
+        var inicioMesAtual = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1);
+        _inicioJanela = inicioMesAtual.AddMonths(-(meses / 2));
+        _fimJanela = _inicioJanela.AddMonths(meses).AddDays(-1);
     }
 
     /// <summary>Aplica um intervalo de datas escolhido livremente no calendário, sobrepondo os botões de período.</summary>
