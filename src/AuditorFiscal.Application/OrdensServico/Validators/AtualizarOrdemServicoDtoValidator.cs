@@ -14,7 +14,7 @@ public class AtualizarOrdemServicoDtoValidator : AbstractValidator<AtualizarOrde
         RuleFor(x => x.Cnpj).NotEmpty().Must(Cnpj.EhValido).WithMessage("CNPJ inválido.");
         RuleFor(x => x.Endereco).NotEmpty().MaximumLength(300);
         RuleFor(x => x.Cidade).NotEmpty().MaximumLength(150);
-        RuleFor(x => x.Responsavel).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Responsavel).MaximumLength(150);
         RuleFor(x => x.Observacoes).MaximumLength(4000);
         RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).When(x => x.Latitude.HasValue);
         RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).When(x => x.Longitude.HasValue);
@@ -38,5 +38,8 @@ public class AtualizarOrdemServicoDtoValidator : AbstractValidator<AtualizarOrde
 
         RuleFor(x => x.PrazoNcre).NotNull().When(x => x.TemNcre)
             .WithMessage("Informe o prazo do NCRE.");
+        RuleFor(x => x.PrazoNcre).LessThanOrEqualTo(x => x.DataFinal)
+            .When(x => x.TemNcre && x.PrazoNcre.HasValue)
+            .WithMessage("Prazo do NCRE não pode ser depois da data final.");
     }
 }

@@ -16,7 +16,9 @@ public class OrdemServico : EntidadeBase
     public Cnpj Cnpj { get; private set; } = null!;
     public string Endereco { get; private set; } = string.Empty;
     public string Cidade { get; private set; } = string.Empty;
-    public string Responsavel { get; private set; } = string.Empty;
+
+    /// <summary>Opcional: nem toda O.S. tem um responsável identificado no momento do cadastro.</summary>
+    public string? Responsavel { get; private set; }
     public SituacaoOS Situacao { get; private set; }
     public TipoFiscalizacao Fiscalizacao { get; private set; }
 
@@ -71,7 +73,7 @@ public class OrdemServico : EntidadeBase
         Cnpj cnpj,
         string endereco,
         string cidade,
-        string responsavel,
+        string? responsavel,
         TipoFiscalizacao fiscalizacao,
         DateOnly recebimentoSfit,
         DateOnly aberturaSfit,
@@ -89,7 +91,7 @@ public class OrdemServico : EntidadeBase
         Cnpj = Guard.NotNull(cnpj, nameof(cnpj));
         Endereco = Guard.NotNullOrWhiteSpace(endereco, nameof(endereco));
         Cidade = Guard.NotNullOrWhiteSpace(cidade, nameof(cidade));
-        Responsavel = Guard.NotNullOrWhiteSpace(responsavel, nameof(responsavel));
+        Responsavel = string.IsNullOrWhiteSpace(responsavel) ? null : responsavel.Trim();
         Fiscalizacao = fiscalizacao;
         RecebimentoSfit = recebimentoSfit;
         AberturaSfit = aberturaSfit;
@@ -114,7 +116,7 @@ public class OrdemServico : EntidadeBase
         Cnpj cnpj,
         string endereco,
         string cidade,
-        string responsavel,
+        string? responsavel,
         TipoFiscalizacao fiscalizacao,
         DateOnly recebimentoSfit,
         DateOnly aberturaSfit,
@@ -127,6 +129,8 @@ public class OrdemServico : EntidadeBase
         Coordenada? coordenada,
         DateTimeOffset momento)
     {
+        var responsavelNormalizado = string.IsNullOrWhiteSpace(responsavel) ? null : responsavel.Trim();
+
         // Sem essa checagem, o auto-save do formulário reenviava os mesmos dados a cada
         // poucos segundos e lotava o histórico com entradas idênticas de "atualizado".
         var alteracoes = new List<string>();
@@ -135,7 +139,7 @@ public class OrdemServico : EntidadeBase
         RegistrarSeMudou(alteracoes, "CNPJ", Cnpj.Formatado(), cnpj.Formatado());
         RegistrarSeMudou(alteracoes, "Endereço", Endereco, endereco);
         RegistrarSeMudou(alteracoes, "Cidade", Cidade, cidade);
-        RegistrarSeMudou(alteracoes, "Responsável", Responsavel, responsavel);
+        RegistrarSeMudou(alteracoes, "Responsável", Responsavel, responsavelNormalizado);
         RegistrarSeMudou(alteracoes, "Fiscalização", Fiscalizacao.ToString(), fiscalizacao.ToString());
         RegistrarSeMudou(alteracoes, "Recebimento SFIT", RecebimentoSfit.ToString("dd/MM/yyyy"), recebimentoSfit.ToString("dd/MM/yyyy"));
         RegistrarSeMudou(alteracoes, "Abertura SFIT", AberturaSfit.ToString("dd/MM/yyyy"), aberturaSfit.ToString("dd/MM/yyyy"));
@@ -156,7 +160,7 @@ public class OrdemServico : EntidadeBase
         Cnpj = Guard.NotNull(cnpj, nameof(cnpj));
         Endereco = Guard.NotNullOrWhiteSpace(endereco, nameof(endereco));
         Cidade = Guard.NotNullOrWhiteSpace(cidade, nameof(cidade));
-        Responsavel = Guard.NotNullOrWhiteSpace(responsavel, nameof(responsavel));
+        Responsavel = responsavelNormalizado;
         Fiscalizacao = fiscalizacao;
         RecebimentoSfit = recebimentoSfit;
         AberturaSfit = aberturaSfit;

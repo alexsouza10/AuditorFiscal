@@ -9,12 +9,17 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="48,40">
         <StackPanel Grid.Row="0" Spacing="2">
-            <TextBlock Text="Bem vindo" FontSize="30" FontWeight="Bold" />
-            <TextBlock Text="Olá! Vamos ao trabalho" FontSize="16" FontWeight="SemiBold" Opacity="0.8" />
+            <TextBlock Text="{Binding TituloBoasVindas}" FontSize="30" FontWeight="Bold" />
+            <TextBlock Text="{Binding MensagemSaudacao}" FontSize="16" FontWeight="SemiBold" Opacity="0.8" />
             <Button Classes="linkNotificacao" Command="{Binding VerAuditoriasHojeCommand}"
                     HorizontalAlignment="Left" Padding="0" Margin="0,6,0,0"
                     ToolTip.Tip="Ver as auditorias em andamento hoje" AutomationProperties.AutomationId="BtnVerHoje">
                 <TextBlock Text="{Binding Resumo}" Opacity="0.6" />
+            </Button>
+            <Button Classes="linkNotificacao" Command="{Binding VerAuditoriasProximaSemanaCommand}"
+                    HorizontalAlignment="Left" Padding="0" Margin="0,2,0,0"
+                    ToolTip.Tip="Ver as auditorias da próxima semana" AutomationProperties.AutomationId="BtnVerProximaSemana">
+                <TextBlock Text="{Binding ResumoProximaSemana}" Opacity="0.6" />
             </Button>
         </StackPanel>
 

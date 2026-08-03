@@ -25,6 +25,8 @@ public partial class ConfiguracoesViewModel : ViewModelBase
     [ObservableProperty] private bool _backupAutomatico;
     [ObservableProperty] private string? _mensagemStatus;
     [ObservableProperty] private bool _processandoBackup;
+    [ObservableProperty] private string _mensagemBoasVindas = string.Empty;
+    [ObservableProperty] private string _mensagemSaudacao = string.Empty;
 
     public ObservableCollection<string> BackupsDisponiveis { get; } = [];
     public IReadOnlyList<TemaAplicacao> TemasDisponiveis { get; } = Enum.GetValues<TemaAplicacao>();
@@ -50,6 +52,8 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         _temaSelecionado = preferencias.Atual.Tema;
         _backupAutomatico = preferencias.Atual.BackupAutomatico;
         _iniciarComWindows = autoStart.EstaHabilitado();
+        _mensagemBoasVindas = preferencias.Atual.MensagemBoasVindas;
+        _mensagemSaudacao = preferencias.Atual.MensagemSaudacao;
         _carregando = false;
 
         AtualizarListaBackups();
@@ -87,6 +91,22 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         _preferencias.Salvar(_preferencias.Atual with { BackupAutomatico = value });
     }
 
+    partial void OnMensagemBoasVindasChanged(string value)
+    {
+        if (_carregando)
+            return;
+
+        _preferencias.Salvar(_preferencias.Atual with { MensagemBoasVindas = value });
+    }
+
+    partial void OnMensagemSaudacaoChanged(string value)
+    {
+        if (_carregando)
+            return;
+
+        _preferencias.Salvar(_preferencias.Atual with { MensagemSaudacao = value });
+    }
+
     [RelayCommand]
     private async Task CriarBackupAsync()
     {
@@ -95,7 +115,6 @@ public partial class ConfiguracoesViewModel : ViewModelBase
         try
         {
             var registro = await _backup.CriarBackupAsync(automatico: false);
-            _preferencias.Salvar(_preferencias.Atual with { UltimoBackup = registro.CriadoEm });
             AtualizarListaBackups();
             MensagemStatus = $"Backup criado: {Path.GetFileName(registro.CaminhoArquivo)}";
         }

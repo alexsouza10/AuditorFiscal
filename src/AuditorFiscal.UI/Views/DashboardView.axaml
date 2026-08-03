@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:AuditorFiscal.UI.ViewModels"
+             xmlns:local="using:AuditorFiscal.UI.Converters"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="740"
@@ -9,6 +10,8 @@
 
     <UserControl.Resources>
         <ResourceDictionary>
+            <local:ProporcaoParaPixelsConverter x:Key="ProporcaoParaPixels" />
+
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="BordaBrush" Color="#E2E8F0" />
@@ -22,94 +25,150 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
+    <UserControl.Styles>
+        <Style Selector="Border.cartaoDash">
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="{DynamicResource CartaoBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BordaBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.chipIcone">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+
+        <!-- Layout responsivo: WrapPanel coloca os dois cartões lado a lado quando cabem
+             (telas maiores) e empilha automaticamente quando a janela fica mais estreita
+             (ex.: notebook) — sem depender de bindings de largura, que numa medição própria
+             do contêiner (Bounds do próprio Grid pai) geram um ciclo de remedição instável. -->
+        <Style Selector="Border.metadeCartao">
+            <Setter Property="Width" Value="555" />
+            <Setter Property="Margin" Value="0,0,16,16" />
+        </Style>
+    </UserControl.Styles>
+
     <ScrollViewer Margin="24">
     <Border MaxWidth="1180" HorizontalAlignment="Center">
         <StackPanel Spacing="22" HorizontalAlignment="Stretch">
 
-            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <Button Content="←" Command="{Binding VoltarCommand}" ToolTip.Tip="Voltar ao início" />
-                <StackPanel>
-                    <TextBlock Text="Dashboard" FontSize="24" FontWeight="Bold" />
-                    <TextBlock Text="Eficiência e panorama geral das ordens de serviço" FontSize="13" Opacity="0.6" />
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Button Content="←" Command="{Binding VoltarCommand}" ToolTip.Tip="Voltar ao início" />
+                    <StackPanel>
+                        <TextBlock Text="Dashboard" FontSize="24" FontWeight="Bold" />
+                        <TextBlock Text="Eficiência e panorama geral das ordens de serviço" FontSize="13" Opacity="0.6" />
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
+
+            <!-- Estado vazio: primeira execução, sem nenhuma O.S. cadastrada ainda -->
+            <Border Classes="cartaoDash" Padding="48" IsVisible="{Binding SemDados}">
+                <StackPanel HorizontalAlignment="Center" Spacing="10" MaxWidth="360">
+                    <TextBlock Text="📈" FontSize="40" HorizontalAlignment="Center" Opacity="0.7" />
+                    <TextBlock Text="Nenhuma ordem de serviço ainda" FontSize="16" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" TextAlignment="Center" />
+                    <TextBlock Text="Assim que você cadastrar a primeira O.S., os indicadores e gráficos aparecem aqui."
+                               FontSize="12" Opacity="0.6" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                    <Button Content="+ Nova Ordem de Serviço" Classes="accent" Margin="0,8,0,0"
+                            HorizontalAlignment="Center" Command="{Binding NovaOrdemServicoCommand}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="22" IsVisible="{Binding !SemDados}">
 
             <!-- Indicadores principais -->
             <UniformGrid Columns="5" Rows="1">
-                <Border Margin="0,0,10,0" Padding="16" CornerRadius="8"
-                        Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-                    <StackPanel HorizontalAlignment="Center" Spacing="4">
-                        <TextBlock Text="{Binding Total}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center" />
+                <Border Classes="cartaoDash" Margin="0,0,10,0">
+                    <StackPanel HorizontalAlignment="Center" Spacing="8">
+                        <Border Classes="chipIcone" Background="#2294A3B8">
+                            <TextBlock Text="🗂" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{Binding Total}" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" />
                         <TextBlock Text="Total" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Border>
-                <Border Margin="0,0,10,0" Padding="16" CornerRadius="8"
-                        Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-                    <StackPanel HorizontalAlignment="Center" Spacing="4">
-                        <TextBlock Text="{Binding TotalAgendadas}" FontSize="28" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center" />
+                <Border Classes="cartaoDash" Margin="0,0,10,0">
+                    <StackPanel HorizontalAlignment="Center" Spacing="8">
+                        <Border Classes="chipIcone" Background="#223B82F6">
+                            <TextBlock Text="📅" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{Binding TotalAgendadas}" FontSize="26" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center" />
                         <TextBlock Text="Agendadas" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Border>
-                <Border Margin="0,0,10,0" Padding="16" CornerRadius="8"
-                        Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-                    <StackPanel HorizontalAlignment="Center" Spacing="4">
-                        <TextBlock Text="{Binding TotalEmAndamento}" FontSize="28" FontWeight="Bold" Foreground="#EAB308" HorizontalAlignment="Center" />
+                <Border Classes="cartaoDash" Margin="0,0,10,0">
+                    <StackPanel HorizontalAlignment="Center" Spacing="8">
+                        <Border Classes="chipIcone" Background="#22F59E0B">
+                            <TextBlock Text="⏳" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{Binding TotalEmAndamento}" FontSize="26" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center" />
                         <TextBlock Text="Em andamento" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Border>
-                <Border Margin="0,0,10,0" Padding="16" CornerRadius="8"
-                        Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-                    <StackPanel HorizontalAlignment="Center" Spacing="4">
-                        <TextBlock Text="{Binding TotalConcluidas}" FontSize="28" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" />
+                <Border Classes="cartaoDash" Margin="0,0,10,0">
+                    <StackPanel HorizontalAlignment="Center" Spacing="8">
+                        <Border Classes="chipIcone" Background="#2222C55E">
+                            <TextBlock Text="✅" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{Binding TotalConcluidas}" FontSize="26" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" />
                         <TextBlock Text="Concluídas" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Border>
-                <Border Padding="16" CornerRadius="8"
-                        Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-                    <StackPanel HorizontalAlignment="Center" Spacing="4">
-                        <TextBlock Text="{Binding TotalFavoritas}" FontSize="28" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center" />
+                <Border Classes="cartaoDash">
+                    <StackPanel HorizontalAlignment="Center" Spacing="8">
+                        <Border Classes="chipIcone" Background="#22EAB308">
+                            <TextBlock Text="⭐" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{Binding TotalFavoritas}" FontSize="26" FontWeight="Bold" Foreground="#EAB308" HorizontalAlignment="Center" />
                         <TextBlock Text="Favoritas" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
+            <!-- Eficiência de conclusão + produção mensal: o WrapPanel os mantém lado a lado
+                 enquanto couberem juntos e empilha automaticamente quando a janela estreita -->
+            <WrapPanel>
+
             <!-- Eficiência de conclusão -->
-            <Border Padding="18" CornerRadius="8"
-                    Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-                <StackPanel Spacing="12">
+            <Border Classes="cartaoDash metadeCartao">
+                <StackPanel Spacing="14">
                     <TextBlock Text="Eficiência de conclusão" Classes="sectionTitle" />
                     <Grid ColumnDefinitions="Auto,*">
                         <TextBlock Grid.Column="0" Text="{Binding TaxaConclusao, StringFormat='{}{0}%'}"
-                                   FontSize="32" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,20,0" />
-                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                            <TextBlock Text="das O.S. cadastradas já foram concluídas" FontSize="12" Opacity="0.7" />
-                            <ProgressBar Value="{Binding TaxaConclusao}" Minimum="0" Maximum="100" Height="8" CornerRadius="4" />
+                                   FontSize="48" FontWeight="Bold" Foreground="#22C55E"
+                                   VerticalAlignment="Center" Margin="0,0,24,0" />
+                        <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Text="das O.S. cadastradas já foram concluídas" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            <ProgressBar Value="{Binding TaxaConclusao}" Minimum="0" Maximum="100" Height="10" CornerRadius="5"
+                                         Foreground="#22C55E" Background="#2222C55E" />
                         </StackPanel>
                     </Grid>
 
                     <UniformGrid Columns="3" Margin="0,8,0,0">
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
                             <TextBlock Text="{Binding ConcluidasSemana}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
-                            <TextBlock Text="Concluídas nesta semana" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" TextAlignment="Center" />
+                            <TextBlock Text="Nesta semana" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" TextAlignment="Center" />
                         </StackPanel>
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
                             <TextBlock Text="{Binding ConcluidasMes}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
-                            <TextBlock Text="Concluídas neste mês" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" TextAlignment="Center" />
+                            <TextBlock Text="Neste mês" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" TextAlignment="Center" />
                         </StackPanel>
                         <StackPanel HorizontalAlignment="Center" Spacing="2">
                             <TextBlock Text="{Binding ConcluidasAno}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
-                            <TextBlock Text="Concluídas neste ano" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" TextAlignment="Center" />
+                            <TextBlock Text="Neste ano" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" TextAlignment="Center" />
                         </StackPanel>
                     </UniformGrid>
                 </StackPanel>
             </Border>
 
             <!-- Produção mensal: entradas (recebidas no SFIT) x saídas (concluídas) -->
-            <Border Padding="18" CornerRadius="8"
-                    Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
+            <Border Classes="cartaoDash metadeCartao">
                 <StackPanel Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0" Text="Produção mensal — recebidas x concluídas" Classes="sectionTitle" />
+                        <TextBlock Grid.Column="0" Text="Produção mensal" Classes="sectionTitle" />
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Rectangle Width="12" Height="12" RadiusX="3" RadiusY="3" Fill="#3B82F6" />
@@ -122,23 +181,27 @@
                         </StackPanel>
                     </Grid>
 
-                    <ItemsControl ItemsSource="{Binding ProducaoMensal}" HorizontalAlignment="Center">
+                    <!-- UniformGrid em vez de StackPanel de largura fixa: os 6 meses sempre dividem
+                         igualmente a largura real do cartão, então o gráfico encolhe/cresce junto
+                         com a janela em vez de vazar para fora quando o cartão fica mais estreito. -->
+                    <ItemsControl ItemsSource="{Binding ProducaoMensal}" Margin="0,6,0,0">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="36" />
+                                <UniformGrid Rows="1" Columns="6" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:BarraProducaoMensalViewModel">
-                                <StackPanel Width="72" Spacing="6">
-                                    <Border Height="120" VerticalAlignment="Bottom">
+                                <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                    <Border Height="120" MinWidth="54" VerticalAlignment="Bottom"
+                                            BorderBrush="{DynamicResource BordaBrush}" BorderThickness="0,0,0,1">
                                         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Bottom" HorizontalAlignment="Center">
-                                            <Rectangle Height="{Binding AlturaAbertasPixels}" Width="26" Fill="#3B82F6"
-                                                       RadiusX="4" RadiusY="4" VerticalAlignment="Bottom"
-                                                       ToolTip.Tip="{Binding Abertas, StringFormat='{}{0} recebida(s)'}" />
-                                            <Rectangle Height="{Binding AlturaConcluidasPixels}" Width="26" Fill="#22C55E"
-                                                       RadiusX="4" RadiusY="4" VerticalAlignment="Bottom"
-                                                       ToolTip.Tip="{Binding Concluidas, StringFormat='{}{0} concluída(s)'}" />
+                                            <Border Height="{Binding AlturaAbertasPixels}" Width="24" Background="#3B82F6"
+                                                    CornerRadius="4,4,0,0" VerticalAlignment="Bottom"
+                                                    ToolTip.Tip="{Binding Abertas, StringFormat='{}{0} recebida(s)'}" />
+                                            <Border Height="{Binding AlturaConcluidasPixels}" Width="24" Background="#22C55E"
+                                                    CornerRadius="4,4,0,0" VerticalAlignment="Bottom"
+                                                    ToolTip.Tip="{Binding Concluidas, StringFormat='{}{0} concluída(s)'}" />
                                         </StackPanel>
                                     </Border>
                                     <TextBlock Text="{Binding Rotulo}" FontSize="12" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center" />
@@ -149,25 +212,37 @@
                 </StackPanel>
             </Border>
 
-            <!-- Pizza por situação -->
-            <Border Padding="18" CornerRadius="8"
-                    Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
+            </WrapPanel>
+
+            <!-- Rosca por situação + por tipo de fiscalização: mesmo WrapPanel responsivo -->
+            <WrapPanel>
+
+            <!-- Rosca por situação, com o total no miolo -->
+            <Border Classes="cartaoDash metadeCartao">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Por situação (pizza)" Classes="sectionTitle" />
-                    <StackPanel Orientation="Horizontal" Spacing="40" HorizontalAlignment="Center" Margin="0,8">
-                        <ItemsControl ItemsSource="{Binding PizzaSituacao}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <Panel Width="180" Height="180" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:FatiaPizzaViewModel">
-                                    <Path Data="{Binding Geometria}" Fill="{Binding Cor}"
-                                          Stroke="{DynamicResource CartaoBrush}" StrokeThickness="2" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                    <TextBlock Text="Por situação" Classes="sectionTitle" />
+                    <StackPanel Orientation="Horizontal" Spacing="44" HorizontalAlignment="Center" Margin="0,8">
+                        <Grid Width="180" Height="180">
+                            <ItemsControl ItemsSource="{Binding PizzaSituacao}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Panel Width="180" Height="180" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:FatiaPizzaViewModel">
+                                        <Path Data="{Binding Geometria}" Fill="{Binding Cor}"
+                                              Stroke="{DynamicResource CartaoBrush}" StrokeThickness="2"
+                                              ToolTip.Tip="{Binding Rotulo}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <TextBlock Text="{Binding Total}" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center" />
+                                <TextBlock Text="Total" FontSize="11" Opacity="0.6" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
 
                         <ItemsControl ItemsSource="{Binding PizzaSituacao}" VerticalAlignment="Center">
                             <ItemsControl.ItemTemplate>
@@ -175,6 +250,7 @@
                                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,6">
                                         <Rectangle Width="14" Height="14" RadiusX="3" RadiusY="3" Fill="{Binding Cor}" />
                                         <TextBlock Text="{Binding Rotulo}" FontSize="13" />
+                                        <TextBlock Text="{Binding Quantidade}" FontSize="13" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding Percentual, StringFormat='({0}%)'}" FontSize="13" Opacity="0.6" />
                                     </StackPanel>
                                 </DataTemplate>
@@ -184,54 +260,39 @@
                 </StackPanel>
             </Border>
 
-            <!-- Distribuições -->
-            <Grid ColumnDefinitions="*,16,*">
-                <Border Grid.Column="0" Padding="18" CornerRadius="8"
-                        Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Por situação" Classes="sectionTitle" />
-                        <ItemsControl ItemsSource="{Binding DistribuicaoSituacao}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:BarraDashboardViewModel">
-                                    <Grid ColumnDefinitions="*,Auto" Margin="0,4">
-                                        <StackPanel Grid.Column="0" Spacing="2">
-                                            <TextBlock Text="{Binding Rotulo}" FontSize="12" />
-                                            <Rectangle Height="8" RadiusX="4" RadiusY="4"
-                                                       Width="{Binding Largura}" Fill="{Binding Cor}"
-                                                       HorizontalAlignment="Left" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1" Text="{Binding Quantidade}" FontSize="12"
-                                                   VerticalAlignment="Bottom" Margin="6,0,0,0" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
+            <!-- Por tipo de fiscalização: a rosca ao lado já cobre a distribuição por situação
+                 (com a mesma legenda), então esta seção evita repetir o mesmo recorte duas vezes -->
+            <Border Classes="cartaoDash metadeCartao">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Por tipo de fiscalização" Classes="sectionTitle" />
+                    <ItemsControl x:Name="AreaBarraTipo" ItemsSource="{Binding DistribuicaoTipo}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BarraDashboardViewModel">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,6">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="{Binding Rotulo}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                        <Border Height="8" CornerRadius="0,4,4,0"
+                                                Background="{Binding Cor}" HorizontalAlignment="Left">
+                                            <Border.Width>
+                                                <MultiBinding Converter="{StaticResource ProporcaoParaPixels}" ConverterParameter="52">
+                                                    <Binding Path="Proporcao" />
+                                                    <Binding Path="#AreaBarraTipo.Bounds.Width" />
+                                                </MultiBinding>
+                                            </Border.Width>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding Quantidade}" FontSize="12" FontWeight="SemiBold"
+                                               VerticalAlignment="Bottom" Margin="8,0,0,0" MinWidth="20" TextAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
 
-                <Border Grid.Column="2" Padding="18" CornerRadius="8"
-                        Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Por tipo de fiscalização" Classes="sectionTitle" />
-                        <ItemsControl ItemsSource="{Binding DistribuicaoTipo}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:BarraDashboardViewModel">
-                                    <Grid ColumnDefinitions="*,Auto" Margin="0,4">
-                                        <StackPanel Grid.Column="0" Spacing="2">
-                                            <TextBlock Text="{Binding Rotulo}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                            <Rectangle Height="8" RadiusX="4" RadiusY="4"
-                                                       Width="{Binding Largura}" Fill="{Binding Cor}"
-                                                       HorizontalAlignment="Left" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1" Text="{Binding Quantidade}" FontSize="12"
-                                                   VerticalAlignment="Bottom" Margin="6,0,0,0" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
-            </Grid>
+            </WrapPanel>
+
+            </StackPanel>
 
         </StackPanel>
     </Border>

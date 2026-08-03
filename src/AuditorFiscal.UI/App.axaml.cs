@@ -63,6 +63,10 @@ public partial class App : global::Avalonia.Application
 
             desktop.ShutdownRequested += (_, _) =>
             {
+                // Bloqueia a saída propositalmente: o backup de fechamento só é útil se
+                // terminar antes do host (e a conexão com o banco) serem derrubados.
+                Task.Run(ExecutarBackupAutomaticoAsync).GetAwaiter().GetResult();
+
                 Log.CloseAndFlush();
                 _host.Dispose();
             };
@@ -128,8 +132,10 @@ public partial class App : global::Avalonia.Application
     }
 
     /// <summary>
-    /// Backup automático em segundo plano: nunca deve atrasar a abertura da janela nem
-    /// derrubar o app se o disco estiver indisponível.
+    /// Backup automático ao abrir e ao fechar o app: nunca deve derrubar o app se o disco
+    /// estiver indisponível. Sempre grava por cima do mesmo arquivo (ver
+    /// <see cref="AuditorFiscal.Infrastructure.Backup.BackupService"/>), então rodar em toda
+    /// abertura/fechamento não acumula backups antigos na pasta.
     /// </summary>
     private async Task ExecutarBackupAutomaticoAsync()
     {
@@ -139,14 +145,8 @@ public partial class App : global::Avalonia.Application
             if (!preferencias.Atual.BackupAutomatico)
                 return;
 
-            var ultimo = preferencias.Atual.UltimoBackup;
-            var intervalo = TimeSpan.FromHours(preferencias.Atual.BackupIntervaloHoras);
-            if (ultimo is not null && DateTimeOffset.UtcNow - ultimo < intervalo)
-                return;
-
             var backup = _host.Services.GetRequiredService<IBackupService>();
             var registro = await backup.CriarBackupAsync(automatico: true);
-            preferencias.Salvar(preferencias.Atual with { UltimoBackup = registro.CriadoEm });
 
             Log.Information("Backup automático concluído ({Bytes} bytes).", registro.TamanhoBytes);
         }

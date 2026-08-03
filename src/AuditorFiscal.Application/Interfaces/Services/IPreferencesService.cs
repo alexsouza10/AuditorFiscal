@@ -12,8 +12,8 @@ public sealed record Preferencias
     public TemaAplicacao Tema { get; init; } = TemaAplicacao.Sistema;
     public bool IniciarComWindows { get; init; }
     public bool BackupAutomatico { get; init; } = true;
-    public int BackupIntervaloHoras { get; init; } = 24;
-    public DateTimeOffset? UltimoBackup { get; init; }
+    public string MensagemBoasVindas { get; init; } = "Bem vindo";
+    public string MensagemSaudacao { get; init; } = "Olá! Vamos ao trabalho";
 }
 
 /// <summary>

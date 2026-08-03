@@ -30,17 +30,20 @@
     <UserControl.Styles>
         <Style Selector="TextBox">
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Padding" Value="10,8" />
-            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="MinHeight" Value="34" />
         </Style>
         <Style Selector="ComboBox">
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Padding" Value="10,8" />
-            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="MinHeight" Value="34" />
         </Style>
         <Style Selector="CalendarDatePicker">
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="MinHeight" Value="34" />
+        </Style>
+        <Style Selector="TextBlock.fieldLabel">
+            <Setter Property="Margin" Value="0,0,0,2" />
         </Style>
     </UserControl.Styles>
 
@@ -62,6 +65,9 @@
             <StackPanel Orientation="Horizontal" Spacing="16">
                 <Button Content="Salvar" Command="{Binding SalvarCommand}" Classes="accent" MinWidth="120"
                         AutomationProperties.AutomationId="BtnSalvar" />
+                <Button Content="Salvar e Criar Nova OS" Command="{Binding SalvarECriarNovaCommand}" MinWidth="180"
+                        ToolTip.Tip="Salva esta OS e limpa o formulário para cadastrar a próxima"
+                        AutomationProperties.AutomationId="BtnSalvarECriarNova" />
                 <TextBlock Text="{Binding MensagemStatus}" Foreground="#22C55E" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding MensagemErro}" Foreground="#EF4444" VerticalAlignment="Center" TextWrapping="Wrap" />
             </StackPanel>
@@ -69,13 +75,20 @@
 
         <TabControl SelectedIndex="{Binding AbaSelecionada}">
         <TabItem Header="Dados">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-            <Grid ColumnDefinitions="*,340" MaxWidth="1040" HorizontalAlignment="Center">
+        <!-- Viewbox escala todo o conteúdo (campos, fontes, espaçamentos) na mesma proporção para
+             sempre caber na tela sem rolagem: encolhe quando a janela é pequena e cresce junto com
+             ela, até o teto de MaxWidth/MaxHeight — mais confiável que recalcular larguras à mão,
+             porque fonte e caixa nunca saem de proporção uma da outra. -->
+        <Viewbox Stretch="Uniform" StretchDirection="Both" MaxWidth="1560" MaxHeight="860"
+                 HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid ColumnDefinitions="Auto,Auto">
 
-                <!-- Dados principais -->
-                <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
+                <!-- Dados principais: grid de 3 colunas iguais que preenche 100% da largura em
+                     toda linha (campos longos ocupam a linha inteira) — sem lacunas — enquanto o
+                     Viewbox cuida da escala geral conforme a janela aumenta ou diminui. -->
+                <StackPanel Grid.Column="0" Width="800" Margin="0,0,24,0" Spacing="10">
 
-                    <Grid ColumnDefinitions="*,16,*">
+                    <Grid ColumnDefinitions="*,16,*,16,*">
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="O.S. N°" Classes="fieldLabel" />
                             <TextBox Text="{Binding Numero}" PlaceholderText="{Binding NumeroPlaceholder}" />
@@ -91,89 +104,47 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                         </StackPanel>
-                    </Grid>
-
-                    <TextBlock Text="Descrição / Cliente" Classes="fieldLabel" />
-                    <TextBox Text="{Binding Empresa}" />
-
-                    <Grid ColumnDefinitions="*,16,*">
-                        <StackPanel Grid.Column="0">
+                        <StackPanel Grid.Column="4">
                             <TextBlock Text="CNPJ" Classes="fieldLabel" />
                             <TextBox Text="{Binding Cnpj}" PlaceholderText="00.000.000/0000-00" />
                         </StackPanel>
-                        <StackPanel Grid.Column="2">
+                    </Grid>
+
+                    <StackPanel>
+                        <TextBlock Text="Descrição / Cliente" Classes="fieldLabel" />
+                        <TextBox Text="{Binding Empresa}" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,16,*,16,*">
+                        <StackPanel Grid.Column="0">
                             <TextBlock Text="3. Fiscalização" Classes="fieldLabel" />
                             <ComboBox ItemsSource="{Binding TiposFiscalizacaoDisponiveis}"
                                       SelectedItem="{Binding FiscalizacaoSelecionada}" HorizontalAlignment="Stretch" />
                         </StackPanel>
-                    </Grid>
-
-                    <TextBlock Text="CEP (opcional)" Classes="fieldLabel" />
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBox Grid.Column="0" Text="{Binding Cep}" PlaceholderText="00000-000" />
-                        <Button Grid.Column="1" Content="Buscar endereço" Margin="8,0,0,0"
-                                Command="{Binding BuscarCepCommand}" AutomationProperties.AutomationId="BtnBuscarCep" />
-                    </Grid>
-                    <TextBlock Text="{Binding MensagemCep}" FontSize="11" Foreground="#EF4444"
-                               TextWrapping="Wrap" IsVisible="{Binding MensagemCep, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
-
-                    <TextBlock Text="Endereço" Classes="fieldLabel" />
-                    <TextBox Text="{Binding Endereco}" />
-
-                    <Grid ColumnDefinitions="*,16,*">
-                        <StackPanel Grid.Column="0">
+                        <StackPanel Grid.Column="2">
                             <TextBlock Text="Cidade" Classes="fieldLabel" />
                             <TextBox Text="{Binding Cidade}" />
                         </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Responsável pela empresa" Classes="fieldLabel" />
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Responsável (opcional)" Classes="fieldLabel" />
                             <TextBox Text="{Binding Responsavel}" />
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock Text="Etapas do fluxo SFIT" Classes="sectionTitle" Margin="0,14,0,0" />
+                    <StackPanel>
+                        <TextBlock Text="CEP (opcional)" Classes="fieldLabel" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0" Text="{Binding Cep}" PlaceholderText="00000-000" />
+                            <Button Grid.Column="1" Content="Buscar endereço" Margin="8,0,0,0"
+                                    Command="{Binding BuscarCepCommand}" AutomationProperties.AutomationId="BtnBuscarCep" />
+                        </Grid>
+                        <TextBlock Text="{Binding MensagemCep}" FontSize="11" Foreground="#EF4444"
+                                   TextWrapping="Wrap" IsVisible="{Binding MensagemCep, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
 
-                    <Grid ColumnDefinitions="*,16,*">
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="1. Recebimento da OS no SFIT" Classes="fieldLabel" />
-                            <CalendarDatePicker SelectedDate="{Binding RecebimentoSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="2. Abertura no SFIT" Classes="fieldLabel" />
-                            <CalendarDatePicker SelectedDate="{Binding AberturaSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-                        </StackPanel>
-                    </Grid>
-
-                    <TextBlock Text="3. Data da Fiscalização" Classes="fieldLabel" />
-                    <CalendarDatePicker SelectedDate="{Binding DataFiscalizacao}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-
-                    <Grid ColumnDefinitions="*,16,*">
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="4. Prazo recebimento documentos [NAD]" Classes="fieldLabel" />
-                            <CalendarDatePicker SelectedDate="{Binding PrazoNad}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="5. Prazo cumprimento obrigações [NCO]" Classes="fieldLabel" />
-                            <CalendarDatePicker SelectedDate="{Binding PrazoNco}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-                        </StackPanel>
-                    </Grid>
-
-                    <Grid ColumnDefinitions="*,16,*">
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="6. Elaboração dos autos" Classes="fieldLabel" />
-                            <CalendarDatePicker SelectedDate="{Binding ElaboracaoAutos}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="7. Data final" Classes="fieldLabel" />
-                            <CalendarDatePicker SelectedDate="{Binding DataFinal}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-                        </StackPanel>
-                    </Grid>
-
-                    <CheckBox Content="Tem NCRE?" IsChecked="{Binding TemNcre}" Margin="0,14,0,0"
-                              AutomationProperties.AutomationId="ChkTemNcre" />
-                    <StackPanel IsVisible="{Binding TemNcre}">
-                        <TextBlock Text="Informe o prazo do NCRE" Classes="fieldLabel" />
-                        <CalendarDatePicker SelectedDate="{Binding PrazoNcre}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                    <StackPanel>
+                        <TextBlock Text="Endereço" Classes="fieldLabel" />
+                        <TextBox Text="{Binding Endereco}" />
                     </StackPanel>
 
                     <Grid ColumnDefinitions="*,16,*">
@@ -187,12 +158,72 @@
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock Text="Observações" Classes="fieldLabel" />
-                    <TextBox Text="{Binding Observacoes}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" />
+                    <StackPanel>
+                        <TextBlock Text="Observações" Classes="fieldLabel" />
+                        <TextBox Text="{Binding Observacoes}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+                    </StackPanel>
+
                 </StackPanel>
 
-                <!-- Anexos + timeline -->
-                <StackPanel Grid.Column="1" Spacing="14">
+                <!-- Etapas SFIT + Anexos -->
+                <StackPanel Grid.Column="1" Spacing="12">
+
+                    <Border Padding="12" CornerRadius="8" Background="{DynamicResource CartaoBrush}"
+                            BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Etapas do fluxo SFIT" Classes="sectionTitle" Margin="0,0,0,2" />
+
+                            <Grid ColumnDefinitions="*,10,*">
+                                <StackPanel Grid.Column="0" MinWidth="120">
+                                    <TextBlock Text="1. Recebimento SFIT" Classes="fieldLabel" ToolTip.Tip="Recebimento da OS no SFIT" />
+                                    <CalendarDatePicker SelectedDate="{Binding RecebimentoSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" MinWidth="120">
+                                    <TextBlock Text="2. Abertura SFIT" Classes="fieldLabel" ToolTip.Tip="Abertura no SFIT" />
+                                    <CalendarDatePicker SelectedDate="{Binding AberturaSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,10,*" Margin="0,2,0,0">
+                                <StackPanel Grid.Column="0" MinWidth="120">
+                                    <TextBlock Text="3. Fiscalização" Classes="fieldLabel" ToolTip.Tip="Data da fiscalização" />
+                                    <CalendarDatePicker SelectedDate="{Binding DataFiscalizacao}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" MinWidth="120">
+                                    <TextBlock Text="4. Prazo NAD" Classes="fieldLabel" ToolTip.Tip="Prazo recebimento de documentos [NAD]" />
+                                    <CalendarDatePicker SelectedDate="{Binding PrazoNad}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,10,*" Margin="0,2,0,0">
+                                <StackPanel Grid.Column="0" MinWidth="120">
+                                    <TextBlock Text="5. Prazo NCO" Classes="fieldLabel" ToolTip.Tip="Prazo cumprimento de obrigações [NCO]" />
+                                    <CalendarDatePicker SelectedDate="{Binding PrazoNco}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" MinWidth="120">
+                                    <TextBlock Text="6. Elaboração dos autos" Classes="fieldLabel" />
+                                    <CalendarDatePicker SelectedDate="{Binding ElaboracaoAutos}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,10,*" Margin="0,2,0,0">
+                                <StackPanel Grid.Column="0" MinWidth="120">
+                                    <TextBlock Text="7. Data final" Classes="fieldLabel" />
+                                    <CalendarDatePicker SelectedDate="{Binding DataFinal}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" MinWidth="120">
+                                    <TextBlock Text=" " Classes="fieldLabel" />
+                                    <CheckBox Content="Tem NCRE?" IsChecked="{Binding TemNcre}" MinHeight="34" VerticalAlignment="Center"
+                                              AutomationProperties.AutomationId="ChkTemNcre" />
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel IsVisible="{Binding TemNcre}" Margin="0,4,0,0">
+                                <TextBlock Text="Prazo do NCRE" Classes="fieldLabel" />
+                                <CalendarDatePicker SelectedDate="{Binding PrazoNcre}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
 
                     <CheckBox Content="Mostrar fotos e anexos" IsChecked="{Binding MostrarArquivos}"
                               AutomationProperties.AutomationId="ChkMostrarArquivos" />
@@ -266,7 +297,7 @@
                 </StackPanel>
 
             </Grid>
-        </ScrollViewer>
+        </Viewbox>
         </TabItem>
 
         <TabItem Header="Histórico" IsEnabled="{Binding PodeExportar}">
