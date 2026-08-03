@@ -131,37 +131,36 @@
                                       SelectedItem="{Binding FiscalizacaoSelecionada}" HorizontalAlignment="Stretch" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Cidade" Classes="fieldLabel" />
-                            <TextBox Text="{Binding Cidade}" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="4">
                             <TextBlock Text="Responsável (opcional)" Classes="fieldLabel" />
                             <TextBox Text="{Binding Responsavel}" />
                         </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="CEP (opcional)" Classes="fieldLabel" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding Cep}" PlaceholderText="00000-000" />
+                                <Button Grid.Column="1" Content="Buscar endereço" Margin="8,0,0,0"
+                                        Command="{Binding BuscarCepCommand}" AutomationProperties.AutomationId="BtnBuscarCep" />
+                            </Grid>
+                            <TextBlock Text="{Binding MensagemCep}" FontSize="11" Foreground="#EF4444"
+                                       TextWrapping="Wrap" IsVisible="{Binding MensagemCep, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
                     </Grid>
-
-                    <StackPanel>
-                        <TextBlock Text="CEP (opcional)" Classes="fieldLabel" />
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBox Grid.Column="0" Text="{Binding Cep}" PlaceholderText="00000-000" />
-                            <Button Grid.Column="1" Content="Buscar endereço" Margin="8,0,0,0"
-                                    Command="{Binding BuscarCepCommand}" AutomationProperties.AutomationId="BtnBuscarCep" />
-                        </Grid>
-                        <TextBlock Text="{Binding MensagemCep}" FontSize="11" Foreground="#EF4444"
-                                   TextWrapping="Wrap" IsVisible="{Binding MensagemCep, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
-                    </StackPanel>
 
                     <StackPanel>
                         <TextBlock Text="Endereço" Classes="fieldLabel" />
                         <TextBox Text="{Binding Endereco}" />
                     </StackPanel>
 
-                    <Grid ColumnDefinitions="*,16,*">
+                    <Grid ColumnDefinitions="*,16,*,16,*">
                         <StackPanel Grid.Column="0">
+                            <TextBlock Text="Cidade" Classes="fieldLabel" />
+                            <TextBox Text="{Binding Cidade}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
                             <TextBlock Text="Latitude (opcional)" Classes="fieldLabel" />
                             <TextBox Text="{Binding LatitudeTexto}" PlaceholderText="-23.550520" />
                         </StackPanel>
-                        <StackPanel Grid.Column="2">
+                        <StackPanel Grid.Column="4">
                             <TextBlock Text="Longitude (opcional)" Classes="fieldLabel" />
                             <TextBox Text="{Binding LongitudeTexto}" PlaceholderText="-46.633308" />
                         </StackPanel>

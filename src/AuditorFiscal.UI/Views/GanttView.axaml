@@ -60,7 +60,14 @@
                 Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
             <WrapPanel VerticalAlignment="Center">
                 <TextBox Text="{Binding FiltroTexto}" PlaceholderText="Buscar por O.S., CNPJ ou empresa…"
-                         Width="260" Margin="0,0,16,0" AutomationProperties.AutomationId="TxtBuscaGantt" />
+                         Width="260" Margin="0,0,16,0" AutomationProperties.AutomationId="TxtBuscaGantt">
+                    <TextBox.InnerRightContent>
+                        <Button Content="✕" FontSize="10" Padding="6,2" Background="Transparent" BorderThickness="0"
+                                Command="{Binding LimparBuscaCommand}"
+                                IsVisible="{Binding FiltroTexto, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                                ToolTip.Tip="Limpar busca" AutomationProperties.AutomationId="BtnLimparBuscaGantt" />
+                    </TextBox.InnerRightContent>
+                </TextBox>
 
                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,16,0" VerticalAlignment="Center">
                     <TextBlock Text="Período:" FontSize="12" Opacity="0.65" VerticalAlignment="Center" Margin="0,0,4,0" />
@@ -131,6 +138,15 @@
                                                             <Binding Path="#AreaTimeline.Bounds.Width" />
                                                         </MultiBinding>
                                                     </Button.Margin>
+                                                    <!-- Largura travada na duração real da O.S. (mesma escala dos segmentos)
+                                                         — sem isso, um nome de empresa longo alargava o botão além do
+                                                         intervalo de datas verdadeiro, sobrando uma "cauda" em branco. -->
+                                                    <Button.Width>
+                                                        <MultiBinding Converter="{StaticResource ProporcaoParaPixels}">
+                                                            <Binding Path="LarguraTotal" />
+                                                            <Binding Path="#AreaTimeline.Bounds.Width" />
+                                                        </MultiBinding>
+                                                    </Button.Width>
                                                     <Border CornerRadius="5" ClipToBounds="True"
                                                             BorderBrush="{DynamicResource SystemAccentColor}"
                                                             BorderThickness="{Binding Selecionada, Converter={StaticResource BoolParaEspessura}}">
@@ -157,12 +173,23 @@
                                                                 </ItemsControl.ItemTemplate>
                                                             </ItemsControl>
 
-                                                            <!-- Rótulo sobreposto DENTRO da barra, não numa coluna fixa ao lado -->
+                                                            <!-- Rótulo sobreposto DENTRO da barra, não numa coluna fixa ao lado.
+                                                                 O fundo escuro só envolve o texto (não a barra inteira, senão
+                                                                 "mancha" as cores dos segmentos por baixo) — mas o MaxWidth
+                                                                 trava na largura real da barra, para o nome quebrar em até
+                                                                 2 linhas em vez de forçar a barra a alargar. -->
                                                             <Border Background="#40000000" CornerRadius="3" Padding="6,2"
                                                                     Margin="4" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <Border.MaxWidth>
+                                                                    <MultiBinding Converter="{StaticResource ProporcaoParaPixels}" ConverterParameter="8">
+                                                                        <Binding Path="LarguraTotal" />
+                                                                        <Binding Path="#AreaTimeline.Bounds.Width" />
+                                                                    </MultiBinding>
+                                                                </Border.MaxWidth>
+                                                                <StackPanel Spacing="1">
                                                                     <TextBlock Text="{Binding Empresa}" FontSize="11" FontWeight="SemiBold"
-                                                                               Foreground="White" TextTrimming="CharacterEllipsis" MaxWidth="220" />
+                                                                               Foreground="White" TextWrapping="Wrap" MaxLines="2"
+                                                                               TextTrimming="CharacterEllipsis" />
                                                                     <TextBlock Text="{Binding Numero}" FontSize="10" Foreground="White" Opacity="0.85" />
                                                                 </StackPanel>
                                                             </Border>
