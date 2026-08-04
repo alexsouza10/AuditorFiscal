@@ -27,7 +27,6 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     private readonly DispatcherTimer _debounceBusca;
 
     [ObservableProperty] private string? _termoBusca;
-    [ObservableProperty] private SituacaoOS? _situacaoFiltro;
     [ObservableProperty] private string? _empresaFiltro;
     [ObservableProperty] private string? _cidadeFiltro;
     [ObservableProperty] private string? _responsavelFiltro;
@@ -58,8 +57,7 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     public ObservableCollection<LogInterno> Logs { get; } = [];
     public ObservableCollection<TimelineEvento> TimelineSelecionada { get; } = [];
 
-    public IReadOnlyList<SituacaoOS?> SituacoesFiltro { get; } =
-        new SituacaoOS?[] { null }.Concat(Enum.GetValues<SituacaoOS>().Cast<SituacaoOS?>()).ToList();
+    public SituacaoMultiSelectViewModel SituacaoFiltro { get; } = new();
 
     public IReadOnlyList<TipoFiscalizacao?> FiscalizacoesFiltro { get; } =
         new TipoFiscalizacao?[] { null }.Concat(Enum.GetValues<TipoFiscalizacao>().Cast<TipoFiscalizacao?>()).ToList();
@@ -98,11 +96,12 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
 
         WeakReferenceMessenger.Default.Register<OrdemServicoAlteradaMessage>(this, async (_, _) => await BuscarAsync());
 
+        SituacaoFiltro.SelecaoAlterada += (_, _) => ReiniciarDebounce();
+
         _ = InicializarAsync();
     }
 
     partial void OnTermoBuscaChanged(string? value) => ReiniciarDebounce();
-    partial void OnSituacaoFiltroChanged(SituacaoOS? value) => ReiniciarDebounce();
     partial void OnEmpresaFiltroChanged(string? value) => ReiniciarDebounce();
     partial void OnCidadeFiltroChanged(string? value) => ReiniciarDebounce();
     partial void OnResponsavelFiltroChanged(string? value) => ReiniciarDebounce();
@@ -154,7 +153,8 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         var interpretado = ConsultaOrdemServicoParser.Interpretar(TermoBusca);
         var filtro = interpretado with
         {
-            Situacao = SituacaoFiltro ?? interpretado.Situacao,
+            Situacao = SituacaoFiltro.Selecionadas.Count == 0 ? interpretado.Situacao : null,
+            Situacoes = SituacaoFiltro.Selecionadas.Count > 0 ? SituacaoFiltro.Selecionadas : null,
             Fiscalizacao = FiscalizacaoFiltro ?? interpretado.Fiscalizacao,
             SomenteFavoritos = SomenteFavoritos || interpretado.SomenteFavoritos,
             SomenteAtrasadas = SomenteAtrasadas || interpretado.SomenteAtrasadas,
@@ -185,7 +185,7 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     private async Task LimparFiltrosAsync()
     {
         TermoBusca = null;
-        SituacaoFiltro = null;
+        SituacaoFiltro.TodasSituacoes = true;
         EmpresaFiltro = null;
         CidadeFiltro = null;
         ResponsavelFiltro = null;
@@ -276,7 +276,7 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         // o histórico completo, e paramos o debounce para uma 2ª busca disparada pelas
         // mudanças acima não sobrescrever a mensagem de status logo em seguida.
         TermoBusca = null;
-        SituacaoFiltro = null;
+        SituacaoFiltro.TodasSituacoes = true;
         SomenteFavoritos = false;
         EmpresaFiltro = Selecionada.Empresa;
 
@@ -398,8 +398,9 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         if (!string.IsNullOrWhiteSpace(EmpresaFiltro))
             return $"Histórico — {EmpresaFiltro}";
 
-        if (SituacaoFiltro.HasValue)
-            return $"Ordens de serviço — {SituacaoFiltro.Value.Descricao()}";
+        var situacoes = SituacaoFiltro.Selecionadas;
+        if (situacoes.Count > 0)
+            return $"Ordens de serviço — {string.Join(", ", situacoes.Select(s => s.Descricao()))}";
 
         return SomenteFavoritos ? "Ordens de serviço favoritas" : "Relatório de ordens de serviço";
     }

@@ -4,6 +4,7 @@
              xmlns:gantt="using:AuditorFiscal.UI.ViewModels.Gantt"
              xmlns:conv="using:Avalonia.Data.Converters"
              xmlns:local="using:AuditorFiscal.UI.Converters"
+             xmlns:controls="using:AuditorFiscal.UI.Views.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1300" d:DesignHeight="740"
@@ -55,12 +56,15 @@
                     Command="{Binding NovaOrdemCommand}" VerticalAlignment="Center" />
         </Grid>
 
-        <!-- Filtros: busca por OS/CNPJ/empresa, período rápido e intervalo personalizado -->
-        <Border Grid.Row="1" Padding="12" CornerRadius="8" Margin="0,0,0,14"
+        <!-- Filtros: busca por OS/CNPJ/empresa, período rápido e intervalo personalizado.
+             Grid (não WrapPanel) com a busca na única coluna "*": ela é a primeira a encolher
+             quando a janela fica estreita, então os grupos de filtro nunca quebram linha —
+             cabem até na largura mínima da janela (900px, ver MainWindow.MinWidth). -->
+        <Border Grid.Row="1" Padding="10" CornerRadius="8" Margin="0,0,0,14"
                 Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
-            <WrapPanel VerticalAlignment="Center">
-                <TextBox Text="{Binding FiltroTexto}" PlaceholderText="Buscar por O.S., CNPJ ou empresa…"
-                         Width="260" Margin="0,0,16,0" AutomationProperties.AutomationId="TxtBuscaGantt">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" VerticalAlignment="Center">
+                <TextBox Grid.Column="0" Text="{Binding FiltroTexto}" PlaceholderText="Buscar por O.S., CNPJ ou empresa…"
+                         MinWidth="110" Margin="0,0,10,0" AutomationProperties.AutomationId="TxtBuscaGantt">
                     <TextBox.InnerRightContent>
                         <Button Content="✕" FontSize="10" Padding="6,2" Background="Transparent" BorderThickness="0"
                                 Command="{Binding LimparBuscaCommand}"
@@ -69,21 +73,26 @@
                     </TextBox.InnerRightContent>
                 </TextBox>
 
-                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,16,0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,0,10,0" VerticalAlignment="Center">
                     <TextBlock Text="Período:" FontSize="12" Opacity="0.65" VerticalAlignment="Center" Margin="0,0,4,0" />
-                    <Button Content="3 meses" Command="{Binding DefinirPeriodoCommand}" CommandParameter="3" />
-                    <Button Content="6 meses" Command="{Binding DefinirPeriodoCommand}" CommandParameter="6" />
-                    <Button Content="1 ano (padrão)" Command="{Binding DefinirPeriodoCommand}" CommandParameter="12" />
+                    <Button Content="3 meses" Padding="8,6" Command="{Binding DefinirPeriodoCommand}" CommandParameter="3" />
+                    <Button Content="6 meses" Padding="8,6" Command="{Binding DefinirPeriodoCommand}" CommandParameter="6" />
+                    <Button Content="1 ano" Padding="8,6" Command="{Binding DefinirPeriodoCommand}" CommandParameter="12"
+                            ToolTip.Tip="1 ano (padrão)" />
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <TextBlock Text="Intervalo:" FontSize="12" Opacity="0.65" VerticalAlignment="Center" Margin="0,0,4,0" />
-                    <CalendarDatePicker SelectedDate="{Binding FiltroInicio}" PlaceholderText="Início" Width="130" />
-                    <TextBlock Text="—" VerticalAlignment="Center" Opacity="0.6" />
-                    <CalendarDatePicker SelectedDate="{Binding FiltroFim}" PlaceholderText="Fim" Width="130" />
-                    <Button Content="Aplicar" Command="{Binding AplicarPeriodoPersonalizadoCommand}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <TextBlock Text="Situação:" FontSize="12" Opacity="0.65" VerticalAlignment="Center" />
+                    <controls:SituacaoMultiSelectFiltro DataContext="{Binding SituacaoFiltro}" Width="120" />
                 </StackPanel>
-            </WrapPanel>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <CalendarDatePicker SelectedDate="{Binding FiltroInicio}" PlaceholderText="Início" Width="92" />
+                    <TextBlock Text="—" VerticalAlignment="Center" Opacity="0.6" />
+                    <CalendarDatePicker SelectedDate="{Binding FiltroFim}" PlaceholderText="Fim" Width="92" />
+                    <Button Content="Aplicar" Padding="8,6" Command="{Binding AplicarPeriodoPersonalizadoCommand}" />
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Área principal: gráfico + painel de detalhes, ambos esticando com a janela -->

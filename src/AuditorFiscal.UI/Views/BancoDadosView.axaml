@@ -4,6 +4,7 @@
              xmlns:entities="using:AuditorFiscal.Domain.Entities"
              xmlns:conv="using:Avalonia.Data.Converters"
              xmlns:local="using:AuditorFiscal.UI.Converters"
+             xmlns:controls="using:AuditorFiscal.UI.Views.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
@@ -64,14 +65,7 @@
 
                     <StackPanel Spacing="4">
                         <TextBlock Text="Situação" FontSize="11" Opacity="0.6" />
-                        <ComboBox ItemsSource="{Binding SituacoesFiltro}" SelectedItem="{Binding SituacaoFiltro}"
-                                  HorizontalAlignment="Stretch" PlaceholderText="Todas">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Converter={StaticResource SituacaoParaDescricao}}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+                        <controls:SituacaoMultiSelectFiltro DataContext="{Binding SituacaoFiltro}" />
                     </StackPanel>
 
                     <StackPanel Spacing="4">

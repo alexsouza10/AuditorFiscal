@@ -7,6 +7,11 @@ public sealed record FiltroOrdemServicoDto
     /// <summary>Texto livre remanescente após a extração dos tokens estruturados da pesquisa.</summary>
     public string? Termo { get; init; }
     public SituacaoOS? Situacao { get; init; }
+
+    /// <summary>Filtro multi-seleção de situação (ex.: tela de Banco de Dados); quando
+    /// presente, é aplicado no lugar de <see cref="Situacao"/>.</summary>
+    public IReadOnlyList<SituacaoOS>? Situacoes { get; init; }
+
     public TipoFiscalizacao? Fiscalizacao { get; init; }
     public Guid? TagId { get; init; }
     public bool SomenteFavoritos { get; init; }

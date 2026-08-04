@@ -40,7 +40,9 @@ public class OrdemServicoRepository(AuditorFiscalDbContext contexto)
             consulta = consulta.Where(x => idsCorrespondentes.Contains(x.Id));
         }
 
-        if (filtro.Situacao.HasValue)
+        if (filtro.Situacoes is { Count: > 0 })
+            consulta = consulta.Where(x => filtro.Situacoes.Contains(x.Situacao));
+        else if (filtro.Situacao.HasValue)
             consulta = consulta.Where(x => x.Situacao == filtro.Situacao.Value);
 
         if (filtro.Fiscalizacao.HasValue)
