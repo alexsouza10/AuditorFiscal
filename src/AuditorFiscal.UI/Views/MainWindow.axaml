@@ -18,6 +18,7 @@
         <KeyBinding Gesture="Ctrl+H" Command="{Binding InicioCommand}" />
         <KeyBinding Gesture="Ctrl+D" Command="{Binding AlternarTemaCommand}" />
         <KeyBinding Gesture="Ctrl+K" Command="{Binding DashboardCommand}" />
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding PesquisaGlobalCommand}" />
         <KeyBinding Gesture="Escape" Command="{Binding VoltarCommand}" />
     </Window.KeyBindings>
 
@@ -43,6 +44,9 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                    <Button Content="🔎" Command="{Binding PesquisaGlobalCommand}"
+                            ToolTip.Tip="Pesquisa Global (Ctrl+P)"
+                            AutomationProperties.AutomationId="BtnPesquisaGlobal" />
                     <Button Content="{Binding IconeTema}" Command="{Binding AlternarTemaCommand}"
                             ToolTip.Tip="Alternar tema claro/escuro (Ctrl+D)"
                             AutomationProperties.AutomationId="BtnTema" />

@@ -9,14 +9,16 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly INavigationService _navigation;
     private readonly IThemeService _tema;
+    private readonly IGlobalSearchService _pesquisaGlobal;
 
     [ObservableProperty] private ViewModelBase? _currentPage;
     [ObservableProperty] private string _iconeTema = "🌙";
 
-    public MainViewModel(INavigationService navigation, IThemeService tema)
+    public MainViewModel(INavigationService navigation, IThemeService tema, IGlobalSearchService pesquisaGlobal)
     {
         _navigation = navigation;
         _tema = tema;
+        _pesquisaGlobal = pesquisaGlobal;
 
         navigation.CurrentPageChanged += () => CurrentPage = navigation.CurrentPage;
         navigation.IrParaInicio();
@@ -46,6 +48,9 @@ public partial class MainViewModel : ViewModelBase
 
     [RelayCommand]
     private void Voltar() => _navigation.Voltar();
+
+    [RelayCommand]
+    private async Task PesquisaGlobalAsync() => await _pesquisaGlobal.AbrirAsync();
 
     private void AtualizarIconeTema(TemaAplicacao tema) =>
         IconeTema = tema == TemaAplicacao.Escuro ? "☀" : "🌙";

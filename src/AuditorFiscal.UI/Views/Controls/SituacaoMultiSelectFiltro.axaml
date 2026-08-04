@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AuditorFiscal.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="180" d:DesignHeight="34"
+             x:Class="AuditorFiscal.UI.Views.Controls.SituacaoMultiSelectFiltro"
+             x:DataType="vm:SituacaoMultiSelectViewModel">
+
+    <!-- Um único controle "select" que abre um popup com checkboxes — em vez de vários
+         checkboxes soltos ocupando espaço fixo na tela — reaproveitado no Banco de Dados
+         e no Cronograma GANTT (ver SituacaoMultiSelectViewModel). -->
+    <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+            AutomationProperties.AutomationId="BtnFiltroSituacao">
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" Text="{Binding Resumo}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Grid.Column="1" Text="▾" Opacity="0.6" Margin="6,0,0,0" />
+        </Grid>
+
+        <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedLeft">
+                <StackPanel Spacing="4" MinWidth="180" MaxHeight="280">
+                    <CheckBox Content="Todas" IsChecked="{Binding TodasSituacoes}" />
+                    <Separator Margin="0,2" />
+                    <ItemsControl ItemsSource="{Binding Itens}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SituacaoFiltroItem">
+                                <CheckBox Content="{Binding Descricao}" IsChecked="{Binding Selecionada}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Flyout>
+        </Button.Flyout>
+    </Button>
+
+</UserControl>

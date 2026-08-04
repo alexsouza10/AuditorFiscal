@@ -49,6 +49,10 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     public ObservableCollection<LinhaGanttViewModel> Linhas { get; } = [];
     public IReadOnlyList<SituacaoOS> SituacoesDisponiveis { get; } = Enum.GetValues<SituacaoOS>();
 
+    /// <summary>Filtro de situação com múltipla seleção, compartilhado com a tela de Banco de
+    /// Dados (mesmo componente visual e mesma lógica de invariante "Todas").</summary>
+    public SituacaoMultiSelectViewModel SituacaoFiltro { get; } = new();
+
     public bool TemSelecao => Selecionada is not null;
 
     public GanttViewModel(
@@ -74,6 +78,12 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         };
 
         WeakReferenceMessenger.Default.Register<OrdemServicoAlteradaMessage>(this, async (_, _) => await CarregarAsync());
+
+        SituacaoFiltro.SelecaoAlterada += (_, _) =>
+        {
+            _debounceBusca.Stop();
+            _debounceBusca.Start();
+        };
 
         _ = CarregarAsync();
     }
@@ -287,6 +297,10 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
                     (termoDigitos.Length > 0 && o.Cnpj.Numero.Contains(termoDigitos)))
                 .ToList();
         }
+
+        var situacoesSelecionadas = SituacaoFiltro.Selecionadas;
+        if (situacoesSelecionadas.Count > 0)
+            ordens = ordens.Where(o => situacoesSelecionadas.Contains(o.Situacao)).ToList();
 
         TituloPeriodo = MontarTitulo(_inicioJanela, _fimJanela);
 
