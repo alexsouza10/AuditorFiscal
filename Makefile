@@ -36,7 +36,7 @@ SHELL := C:/Program Files/Git/bin/bash.exe
 endif
 
 APP_PROJECT := src/AuditorFiscal.UI/AuditorFiscal.UI.csproj
-EXE_NAME    := Apura Fiscal.exe
+EXE_NAME    := Gerenciador de AFT.exe
 RUNTIME     := win-x64
 DIST_DIR    := dist
 
@@ -46,7 +46,7 @@ DIST_DIR    := dist
 GIT_DESCRIBE := $(shell git describe --tags 2>/dev/null)
 VERSION      := $(if $(GIT_DESCRIBE),$(patsubst v%,%,$(GIT_DESCRIBE)),0.0.0-dev)
 PUBLISH_DIR  := $(DIST_DIR)/$(VERSION)
-ZIP_FILE     := $(DIST_DIR)/Apura-Fiscal-$(VERSION)-$(RUNTIME).zip
+ZIP_FILE     := $(DIST_DIR)/Gerenciador-de-AFT-$(VERSION)-$(RUNTIME).zip
 
 # Permite "make deploy 1.2.3.4" ou "make tag 1.2.3.4": a palavra extra vira a versão a
 # taguear em vez de o make tentar (e falhar) achar uma receita chamada "1.2.3.4". Sem
