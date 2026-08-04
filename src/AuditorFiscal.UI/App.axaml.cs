@@ -83,12 +83,14 @@ public partial class App : global::Avalonia.Application
         services.AddTransient<IValidator<CriarOrdemServicoDto>, CriarOrdemServicoDtoValidator>();
         services.AddTransient<IValidator<AtualizarOrdemServicoDto>, AtualizarOrdemServicoDtoValidator>();
         services.AddTransient<OrdemServicoService>();
+        services.AddTransient<PainelOperacionalService>();
 
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IFilePickerService, AvaloniaFilePickerService>();
         services.AddSingleton<IFileDialogService, AvaloniaFileDialogService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<IGlobalSearchService, GlobalSearchService>();
 
         services.AddSingleton<MainViewModel>();
         services.AddTransient<HomeViewModel>();
@@ -97,6 +99,7 @@ public partial class App : global::Avalonia.Application
         services.AddTransient<OrdemServicoFormViewModel>();
         services.AddTransient<ConfiguracoesViewModel>();
         services.AddTransient<DashboardViewModel>();
+        services.AddTransient<PesquisaGlobalViewModel>();
     }
 
     private void AplicarMigracoes()

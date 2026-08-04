@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:AuditorFiscal.UI.ViewModels"
+             xmlns:dtos="using:AuditorFiscal.Application.OrdensServico.Dtos"
              xmlns:local="using:AuditorFiscal.UI.Converters"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -48,6 +49,33 @@
             <Setter Property="Width" Value="555" />
             <Setter Property="Margin" Value="0,0,16,16" />
         </Style>
+
+        <!-- Cartão de alerta clicável: mesma aparência de Border.cartaoDash, mas como Button
+             para levar direto à lista filtrada correspondente no Banco de Dados. -->
+        <Style Selector="Button.cartaoAlerta">
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="{DynamicResource CartaoBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BordaBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.cartaoAlerta:pointerover /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.8" />
+        </Style>
+
+        <Style Selector="Button.linhaAlerta">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.linhaAlerta:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+        </Style>
     </UserControl.Styles>
 
     <ScrollViewer Margin="24">
@@ -78,6 +106,98 @@
             </Border>
 
             <StackPanel Spacing="22" IsVisible="{Binding !SemDados}">
+
+            <!-- Painel de Controle Operacional: o que precisa de atenção imediata, sempre no
+                 topo do Dashboard — é a primeira coisa que o auditor deve ver ao abrir o app. -->
+            <Border Classes="cartaoDash">
+                <StackPanel Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="⚠" FontSize="16" IsVisible="{Binding TemAlertas}" />
+                        <TextBlock Text="✓" FontSize="16" IsVisible="{Binding !TemAlertas}" />
+                        <TextBlock Text="Painel de Controle Operacional" Classes="sectionTitle" Margin="0" />
+                    </StackPanel>
+
+                    <UniformGrid Columns="4" Rows="1">
+                        <Button Classes="cartaoAlerta" Margin="0,0,10,0" Command="{Binding AbrirAtrasadasCommand}"
+                                ToolTip.Tip="Ver ordens de serviço atrasadas">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding Atrasadas.Count}" FontSize="24" FontWeight="Bold" Foreground="#EF4444" />
+                                <TextBlock Text="Atrasadas" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="cartaoAlerta" Margin="0,0,10,0" Command="{Binding AbrirVencemHojeCommand}"
+                                ToolTip.Tip="Ver prazos que vencem hoje">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding VencemHoje.Count}" FontSize="24" FontWeight="Bold" Foreground="#F59E0B" />
+                                <TextBlock Text="Vencem hoje" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="cartaoAlerta" Margin="0,0,10,0" Command="{Binding AbrirVencemEmBreveCommand}"
+                                ToolTip.Tip="Ver prazos dos próximos 7 dias">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding VencemEmBreve.Count}" FontSize="24" FontWeight="Bold" Foreground="#3B82F6" />
+                                <TextBlock Text="Vencem em 7 dias" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="cartaoAlerta" Command="{Binding AbrirSemMovimentacaoCommand}"
+                                ToolTip.Tip="Ver O.S. sem movimentação recente">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding SemMovimentacao.Count}" FontSize="24" FontWeight="Bold" Foreground="#94A3B8" />
+                                <TextBlock Text="Sem movimentação" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+
+                    <!-- Estado tranquilo: nada pedindo atenção agora -->
+                    <TextBlock Text="Nenhuma O.S. atrasada, com prazo vencendo ou parada. Tudo em dia."
+                               FontSize="12" Opacity="0.6" IsVisible="{Binding !TemAlertas}" Margin="0,4,0,0" />
+
+                    <!-- Acesso rápido às O.S. mais urgentes, sem precisar passar pelo Banco de Dados -->
+                    <WrapPanel IsVisible="{Binding TemAlertas}">
+                        <StackPanel Width="360" Margin="0,0,16,0" Spacing="4" IsVisible="{Binding TemAtrasadas}">
+                            <TextBlock Text="Mais urgentes" FontSize="11" Opacity="0.6" Margin="8,0,0,4" />
+                            <ItemsControl ItemsSource="{Binding Atrasadas}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dtos:AlertaOrdemServicoDto">
+                                        <Button Classes="linhaAlerta" Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).AbrirOrdemServicoCommand}"
+                                                CommandParameter="{Binding Id}">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="{Binding Empresa}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Numero}" FontSize="11" Opacity="0.6" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding Dias, StringFormat='{}{0}d atraso'}"
+                                                           FontSize="11" Foreground="#EF4444" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <StackPanel Width="360" Spacing="4" IsVisible="{Binding TemVencemHoje}">
+                            <TextBlock Text="Prazos de hoje" FontSize="11" Opacity="0.6" Margin="8,0,0,4" />
+                            <ItemsControl ItemsSource="{Binding VencemHoje}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dtos:AlertaOrdemServicoDto">
+                                        <Button Classes="linhaAlerta" Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).AbrirOrdemServicoCommand}"
+                                                CommandParameter="{Binding Id}">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="{Binding Empresa}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Numero}" FontSize="11" Opacity="0.6" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding Descricao}"
+                                                           FontSize="11" Foreground="#F59E0B" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
 
             <!-- Indicadores principais -->
             <UniformGrid Columns="5" Rows="1">

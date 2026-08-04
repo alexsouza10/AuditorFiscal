@@ -20,6 +20,7 @@ namespace AuditorFiscal.UI.ViewModels;
 public partial class DashboardViewModel : ViewModelBase, IDisposable
 {
     private readonly OrdemServicoService _ordemServicoService;
+    private readonly PainelOperacionalService _painelOperacional;
     private readonly INavigationService _navigation;
 
     [ObservableProperty] private int _total;
@@ -31,19 +32,27 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private int _concluidasMes;
     [ObservableProperty] private int _concluidasAno;
     [ObservableProperty] private double _taxaConclusao;
+    [ObservableProperty] private bool _temAlertas;
+    [ObservableProperty] private bool _temAtrasadas;
+    [ObservableProperty] private bool _temVencemHoje;
 
     public ObservableCollection<BarraDashboardViewModel> DistribuicaoSituacao { get; } = [];
     public ObservableCollection<BarraDashboardViewModel> DistribuicaoTipo { get; } = [];
     public ObservableCollection<FatiaPizzaViewModel> PizzaSituacao { get; } = [];
     public ObservableCollection<BarraProducaoMensalViewModel> ProducaoMensal { get; } = [];
+    public ObservableCollection<AlertaOrdemServicoDto> Atrasadas { get; } = [];
+    public ObservableCollection<AlertaOrdemServicoDto> VencemHoje { get; } = [];
+    public ObservableCollection<AlertaOrdemServicoDto> VencemEmBreve { get; } = [];
+    public ObservableCollection<AlertaOrdemServicoDto> SemMovimentacao { get; } = [];
 
     public bool SemDados => Total == 0;
 
     partial void OnTotalChanged(int value) => OnPropertyChanged(nameof(SemDados));
 
-    public DashboardViewModel(OrdemServicoService ordemServicoService, INavigationService navigation)
+    public DashboardViewModel(OrdemServicoService ordemServicoService, PainelOperacionalService painelOperacional, INavigationService navigation)
     {
         _ordemServicoService = ordemServicoService;
+        _painelOperacional = painelOperacional;
         _navigation = navigation;
 
         WeakReferenceMessenger.Default.Register<OrdemServicoAlteradaMessage>(this, async (_, _) => await CarregarAsync());
@@ -56,6 +65,33 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
 
     [RelayCommand]
     private void NovaOrdemServico() => _navigation.NavegarPara<OrdemServicoFormViewModel>();
+
+    [RelayCommand]
+    private void AbrirAtrasadas() => NavegarParaBancoDadosComConsulta("atrasadas");
+
+    [RelayCommand]
+    private void AbrirVencemHoje() => NavegarParaBancoDadosComConsulta("hoje");
+
+    [RelayCommand]
+    private void AbrirVencemEmBreve() => NavegarParaBancoDadosComConsulta("semana");
+
+    [RelayCommand]
+    private void AbrirSemMovimentacao() => NavegarParaBancoDadosComConsulta("sem-movimentacao");
+
+    [RelayCommand]
+    private async Task AbrirOrdemServicoAsync(Guid id)
+    {
+        var formulario = _navigation.Resolver<OrdemServicoFormViewModel>();
+        await formulario.CarregarParaEdicaoAsync(id);
+        _navigation.NavegarPara(formulario);
+    }
+
+    private void NavegarParaBancoDadosComConsulta(string consultaDsl)
+    {
+        var bancoDados = _navigation.Resolver<BancoDadosViewModel>();
+        bancoDados.TermoBusca = consultaDsl;
+        _navigation.NavegarPara(bancoDados);
+    }
 
     private async Task CarregarAsync()
     {
@@ -81,6 +117,32 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
         AtualizarDistribuicoes(todas);
         AtualizarPizzaSituacao(todas);
         AtualizarProducaoMensal(todas);
+        await AtualizarPainelOperacionalAsync();
+    }
+
+    private async Task AtualizarPainelOperacionalAsync()
+    {
+        var painel = await _painelOperacional.ObterAsync();
+
+        Atrasadas.Clear();
+        foreach (var alerta in painel.Atrasadas)
+            Atrasadas.Add(alerta);
+
+        VencemHoje.Clear();
+        foreach (var alerta in painel.VencemHoje)
+            VencemHoje.Add(alerta);
+
+        VencemEmBreve.Clear();
+        foreach (var alerta in painel.VencemEmBreve)
+            VencemEmBreve.Add(alerta);
+
+        SemMovimentacao.Clear();
+        foreach (var alerta in painel.SemMovimentacao)
+            SemMovimentacao.Add(alerta);
+
+        TemAlertas = painel.TemAlertas;
+        TemAtrasadas = painel.Atrasadas.Count > 0;
+        TemVencemHoje = painel.VencemHoje.Count > 0;
     }
 
     private void AtualizarDistribuicoes(IReadOnlyList<OrdemServico> todas)

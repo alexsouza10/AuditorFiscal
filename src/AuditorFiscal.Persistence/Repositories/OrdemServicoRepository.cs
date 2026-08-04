@@ -1,4 +1,5 @@
 using AuditorFiscal.Application.Interfaces.Persistence;
+using AuditorFiscal.Application.OrdensServico;
 using AuditorFiscal.Application.OrdensServico.Dtos;
 using AuditorFiscal.Domain.Entities;
 using AuditorFiscal.Domain.ValueObjects;
@@ -35,20 +36,24 @@ public class OrdemServicoRepository(AuditorFiscalDbContext contexto)
 
         if (!string.IsNullOrWhiteSpace(filtro.Termo))
         {
-            var termo = $"%{filtro.Termo.Trim()}%";
-            consulta = consulta.Where(x =>
-                EF.Functions.Like(x.Numero, termo) ||
-                EF.Functions.Like(x.Empresa, termo) ||
-                EF.Functions.Like(x.Responsavel, termo) ||
-                EF.Functions.Like(x.Cidade, termo) ||
-                EF.Functions.Like(x.Endereco, termo));
+            var idsCorrespondentes = await BuscarIdsPorTextoLivreAsync(filtro.Termo, ct);
+            consulta = consulta.Where(x => idsCorrespondentes.Contains(x.Id));
         }
 
         if (filtro.Situacao.HasValue)
             consulta = consulta.Where(x => x.Situacao == filtro.Situacao.Value);
 
+        if (filtro.Fiscalizacao.HasValue)
+            consulta = consulta.Where(x => x.Fiscalizacao == filtro.Fiscalizacao.Value);
+
         if (filtro.TagId.HasValue)
             consulta = consulta.Where(x => x.Tags.Any(t => t.Id == filtro.TagId.Value));
+
+        if (!string.IsNullOrWhiteSpace(filtro.TagNome))
+        {
+            var termoTag = $"%{filtro.TagNome.Trim()}%";
+            consulta = consulta.Where(x => x.Tags.Any(t => EF.Functions.Like(t.Nome, termoTag)));
+        }
 
         if (filtro.SomenteFavoritos)
             consulta = consulta.Where(x => x.Favorito);
@@ -59,10 +64,74 @@ public class OrdemServicoRepository(AuditorFiscalDbContext contexto)
         if (filtro.DataFim.HasValue)
             consulta = consulta.Where(x => x.RecebimentoSfit <= filtro.DataFim.Value);
 
-        return await consulta
+        if (!string.IsNullOrWhiteSpace(filtro.EmpresaContem))
+        {
+            var termoEmpresa = $"%{filtro.EmpresaContem.Trim()}%";
+            consulta = consulta.Where(x => EF.Functions.Like(x.Empresa, termoEmpresa));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filtro.CidadeContem))
+        {
+            var termoCidade = $"%{filtro.CidadeContem.Trim()}%";
+            consulta = consulta.Where(x => EF.Functions.Like(x.Cidade, termoCidade));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filtro.ResponsavelContem))
+        {
+            var termoResponsavel = $"%{filtro.ResponsavelContem.Trim()}%";
+            consulta = consulta.Where(x => EF.Functions.Like(x.Responsavel, termoResponsavel));
+        }
+
+        var resultados = await consulta
             .OrderByDescending(x => x.RecebimentoSfit)
             .ToListAsync(ct);
+
+        return AplicarFiltrosCalculados(resultados, filtro);
     }
+
+    /// <summary>
+    /// Atrasada, sem movimentação e prazo em N dias dependem da data de hoje e de regras do
+    /// domínio (<see cref="OrdemServico.EstaAtrasada"/> etc.) que o SQLite não consegue traduzir
+    /// — por isso são aplicadas em memória, depois que o restante do filtro já reduziu o
+    /// conjunto de linhas trazidas do banco.
+    /// </summary>
+    private static IReadOnlyList<OrdemServico> AplicarFiltrosCalculados(IReadOnlyList<OrdemServico> resultados, FiltroOrdemServicoDto filtro)
+    {
+        if (!filtro.SomenteAtrasadas && !filtro.SomenteSemMovimentacao && !filtro.SomenteVencemHoje &&
+            filtro.PrazoMaximoDias is null && filtro.PrazoMinimoDias is null)
+            return resultados;
+
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+
+        return resultados.Where(o =>
+            (!filtro.SomenteAtrasadas || o.EstaAtrasada(hoje)) &&
+            (!filtro.SomenteSemMovimentacao || o.DiasSemMovimentacao(hoje) >= PainelOperacionalService.DiasSemMovimentacaoLimite) &&
+            (!filtro.SomenteVencemHoje || o.DiasProximoPrazo(hoje) == 0) &&
+            (filtro.PrazoMaximoDias is not { } maximo || o.DiasProximoPrazo(hoje) is { } d1 && d1 <= maximo) &&
+            (filtro.PrazoMinimoDias is not { } minimo || o.DiasProximoPrazo(hoje) is { } d2 && d2 >= minimo))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Consulta a tabela virtual FTS5 (sincronizada por gatilhos, ver migration
+    /// AdicionarBuscaFts) em vez de LIKE: cobre também Observações, que o filtro estruturado
+    /// não alcança, e escala melhor conforme o histórico de O.S. cresce ao longo dos anos.
+    /// </summary>
+    private async Task<List<Guid>> BuscarIdsPorTextoLivreAsync(string termo, CancellationToken ct)
+    {
+        var consultaFts = MontarConsultaFts5(termo);
+
+        return await Contexto.Database
+            .SqlQueryRaw<Guid>("SELECT Id FROM OrdensServicoFts WHERE OrdensServicoFts MATCH {0}", consultaFts)
+            .ToListAsync(ct);
+    }
+
+    /// <summary>Cada palavra vira um termo de prefixo entre aspas (escapadas), unidas por AND — evita
+    /// que hífens, dois-pontos etc. digitados pelo auditor quebrem a sintaxe de consulta do FTS5.</summary>
+    private static string MontarConsultaFts5(string termo) =>
+        string.Join(" AND ", termo
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(palavra => $"\"{palavra.Replace("\"", "\"\"")}\"*"));
 
     /// <summary>
     /// Usado pelo Cronograma GANTT: qualquer O.S. cujo intervalo [RecebimentoSfit, DataFinal]

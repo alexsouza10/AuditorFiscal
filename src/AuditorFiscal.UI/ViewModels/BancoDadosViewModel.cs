@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using AuditorFiscal.Application.Interfaces.Services;
 using AuditorFiscal.Application.OrdensServico;
+using AuditorFiscal.Application.OrdensServico.Busca;
 using AuditorFiscal.Application.OrdensServico.Dtos;
 using AuditorFiscal.Domain.Entities;
 using AuditorFiscal.Domain.Enums;
@@ -28,16 +29,29 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private string? _termoBusca;
     [ObservableProperty] private SituacaoOS? _situacaoFiltro;
     [ObservableProperty] private string? _empresaFiltro;
+    [ObservableProperty] private string? _cidadeFiltro;
+    [ObservableProperty] private string? _responsavelFiltro;
+    [ObservableProperty] private TipoFiscalizacao? _fiscalizacaoFiltro;
+    [ObservableProperty] private DateTime? _dataInicioFiltro;
+    [ObservableProperty] private DateTime? _dataFimFiltro;
     [ObservableProperty] private bool _somenteFavoritos;
+    [ObservableProperty] private bool _somenteAtrasadas;
     [ObservableProperty] private OrdemServico? _selecionada;
+    [ObservableProperty] private OrdemServicoLinhaViewModel? _linhaSelecionada;
     [ObservableProperty] private string? _mensagemStatus;
     [ObservableProperty] private int _total;
     [ObservableProperty] private int _totalAgendadas;
     [ObservableProperty] private int _totalEmAndamento;
     [ObservableProperty] private int _totalConcluidas;
     [ObservableProperty] private int _totalFavoritas;
+    [ObservableProperty] private int _paginaAtual = 1;
+    [ObservableProperty] private int _tamanhoPagina = 50;
+    [ObservableProperty] private bool _selecionarTodos;
 
-    public ObservableCollection<OrdemServico> Resultados { get; } = [];
+    /// <summary>Lista completa filtrada (todas as páginas); <see cref="Resultados"/> é apenas a janela exibida.</summary>
+    private List<OrdemServicoLinhaViewModel> _todosItens = [];
+
+    public ObservableCollection<OrdemServicoLinhaViewModel> Resultados { get; } = [];
     public ObservableCollection<string> Empresas { get; } = [];
     public ObservableCollection<BarraDashboardViewModel> DistribuicaoSituacao { get; } = [];
     public ObservableCollection<BarraDashboardViewModel> DistribuicaoTipo { get; } = [];
@@ -47,7 +61,18 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     public IReadOnlyList<SituacaoOS?> SituacoesFiltro { get; } =
         new SituacaoOS?[] { null }.Concat(Enum.GetValues<SituacaoOS>().Cast<SituacaoOS?>()).ToList();
 
+    public IReadOnlyList<TipoFiscalizacao?> FiscalizacoesFiltro { get; } =
+        new TipoFiscalizacao?[] { null }.Concat(Enum.GetValues<TipoFiscalizacao>().Cast<TipoFiscalizacao?>()).ToList();
+
+    public IReadOnlyList<int> TamanhosPagina { get; } = [20, 50, 100, 200];
+
     public bool TemSelecao => Selecionada is not null;
+
+    public int TotalPaginas => _todosItens.Count == 0
+        ? 1
+        : (int)Math.Ceiling(_todosItens.Count / (double)TamanhoPagina);
+
+    public int TotalSelecionados => _todosItens.Count(i => i.Selecionada);
 
     public BancoDadosViewModel(
         OrdemServicoService ordemServicoService,
@@ -79,7 +104,13 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
     partial void OnTermoBuscaChanged(string? value) => ReiniciarDebounce();
     partial void OnSituacaoFiltroChanged(SituacaoOS? value) => ReiniciarDebounce();
     partial void OnEmpresaFiltroChanged(string? value) => ReiniciarDebounce();
+    partial void OnCidadeFiltroChanged(string? value) => ReiniciarDebounce();
+    partial void OnResponsavelFiltroChanged(string? value) => ReiniciarDebounce();
+    partial void OnFiscalizacaoFiltroChanged(TipoFiscalizacao? value) => ReiniciarDebounce();
+    partial void OnDataInicioFiltroChanged(DateTime? value) => ReiniciarDebounce();
+    partial void OnDataFimFiltroChanged(DateTime? value) => ReiniciarDebounce();
     partial void OnSomenteFavoritosChanged(bool value) => ReiniciarDebounce();
+    partial void OnSomenteAtrasadasChanged(bool value) => ReiniciarDebounce();
 
     partial void OnSelecionadaChanged(OrdemServico? value)
     {
@@ -93,14 +124,44 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
             TimelineSelecionada.Add(evento);
     }
 
+    /// <summary>A grade seleciona uma linha (com checkbox de exportação); o painel de detalhe
+    /// e os comandos de ação continuam trabalhando com a entidade pura.</summary>
+    partial void OnLinhaSelecionadaChanged(OrdemServicoLinhaViewModel? value) => Selecionada = value?.OrdemServico;
+
+    partial void OnTamanhoPaginaChanged(int value)
+    {
+        if (PaginaAtual != 1)
+            PaginaAtual = 1;
+        else
+            AtualizarPagina();
+    }
+
+    partial void OnPaginaAtualChanged(int value) => AtualizarPagina();
+
+    /// <summary>Aplica a todo o conjunto filtrado (não só à página exibida), para permitir
+    /// selecionar e exportar mais O.S. do que cabem em uma página.</summary>
+    partial void OnSelecionarTodosChanged(bool value)
+    {
+        foreach (var item in _todosItens)
+            item.Selecionada = value;
+    }
+
     [RelayCommand]
     private async Task BuscarAsync()
     {
-        var filtro = new FiltroOrdemServicoDto
+        // A caixa de busca aceita a query DSL ("empresa:x prazo<5 atrasadas favoritas" etc.);
+        // os controles dedicados da tela têm prioridade quando também preenchidos.
+        var interpretado = ConsultaOrdemServicoParser.Interpretar(TermoBusca);
+        var filtro = interpretado with
         {
-            Termo = TermoBusca,
-            Situacao = SituacaoFiltro,
-            SomenteFavoritos = SomenteFavoritos
+            Situacao = SituacaoFiltro ?? interpretado.Situacao,
+            Fiscalizacao = FiscalizacaoFiltro ?? interpretado.Fiscalizacao,
+            SomenteFavoritos = SomenteFavoritos || interpretado.SomenteFavoritos,
+            SomenteAtrasadas = SomenteAtrasadas || interpretado.SomenteAtrasadas,
+            CidadeContem = string.IsNullOrWhiteSpace(CidadeFiltro) ? interpretado.CidadeContem : CidadeFiltro,
+            ResponsavelContem = string.IsNullOrWhiteSpace(ResponsavelFiltro) ? interpretado.ResponsavelContem : ResponsavelFiltro,
+            DataInicio = DataInicioFiltro is not null ? DateOnly.FromDateTime(DataInicioFiltro.Value) : interpretado.DataInicio,
+            DataFim = DataFimFiltro is not null ? DateOnly.FromDateTime(DataFimFiltro.Value) : interpretado.DataFim
         };
 
         var resultados = await _ordemServicoService.BuscarAsync(filtro);
@@ -108,9 +169,13 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         if (!string.IsNullOrWhiteSpace(EmpresaFiltro))
             resultados = resultados.Where(o => o.Empresa == EmpresaFiltro).ToList();
 
-        Resultados.Clear();
-        foreach (var ordem in resultados)
-            Resultados.Add(ordem);
+        _todosItens = resultados.Select(CriarLinha).ToList();
+        SelecionarTodos = false;
+
+        if (PaginaAtual != 1)
+            PaginaAtual = 1;
+        else
+            AtualizarPagina();
 
         AtualizarIndicadores(resultados);
         MensagemStatus = $"{resultados.Count} resultado(s).";
@@ -122,8 +187,28 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         TermoBusca = null;
         SituacaoFiltro = null;
         EmpresaFiltro = null;
+        CidadeFiltro = null;
+        ResponsavelFiltro = null;
+        FiscalizacaoFiltro = null;
+        DataInicioFiltro = null;
+        DataFimFiltro = null;
         SomenteFavoritos = false;
+        SomenteAtrasadas = false;
         await BuscarAsync();
+    }
+
+    [RelayCommand]
+    private void PaginaAnterior()
+    {
+        if (PaginaAtual > 1)
+            PaginaAtual--;
+    }
+
+    [RelayCommand]
+    private void ProximaPagina()
+    {
+        if (PaginaAtual < TotalPaginas)
+            PaginaAtual++;
     }
 
     [RelayCommand]
@@ -160,6 +245,7 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
             return;
 
         await _ordemServicoService.ExcluirAsync(Selecionada.Id);
+        LinhaSelecionada = null;
         Selecionada = null;
         await BuscarAsync();
         MensagemStatus = "Ordem de serviço excluída.";
@@ -175,7 +261,7 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         await _ordemServicoService.AlternarFavoritoAsync(Selecionada.Id);
         var id = Selecionada.Id;
         await BuscarAsync();
-        Selecionada = Resultados.FirstOrDefault(o => o.Id == id);
+        LinhaSelecionada = _todosItens.FirstOrDefault(i => i.OrdemServico.Id == id);
         WeakReferenceMessenger.Default.Send(new OrdemServicoAlteradaMessage());
     }
 
@@ -196,42 +282,52 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
 
         _debounceBusca.Stop();
         await BuscarAsync();
-        MensagemStatus = $"Histórico de {EmpresaFiltro}: {Resultados.Count} auditoria(s).";
+        MensagemStatus = $"Histórico de {EmpresaFiltro}: {_todosItens.Count} auditoria(s).";
     }
 
     [RelayCommand]
     private async Task ExportarPdfAsync()
     {
-        if (Resultados.Count == 0)
+        var itens = ItensParaExportar();
+        if (itens.Count == 0)
             return;
 
         var destino = await _fileDialog.SalvarComoAsync("relatorio-ordens-servico", "Documento PDF", "pdf");
         if (destino is null)
             return;
 
-        await _pdfExport.ExportarRelatorioAsync(MontarTituloRelatorio(), Resultados.ToList(), destino);
-        MensagemStatus = "Relatório PDF exportado.";
+        await _pdfExport.ExportarRelatorioAsync(MontarTituloRelatorio(), itens, destino);
+        MensagemStatus = $"Relatório PDF exportado ({itens.Count} O.S.).";
     }
 
     [RelayCommand]
     private async Task ExportarExcelAsync()
     {
-        if (Resultados.Count == 0)
+        var itens = ItensParaExportar();
+        if (itens.Count == 0)
             return;
 
         var destino = await _fileDialog.SalvarComoAsync("ordens-servico", "Planilha do Excel", "xlsx");
         if (destino is null)
             return;
 
-        await _excelExport.ExportarAsync(MontarTituloRelatorio(), Resultados.ToList(), destino);
-        MensagemStatus = "Planilha Excel exportada.";
+        await _excelExport.ExportarAsync(MontarTituloRelatorio(), itens, destino);
+        MensagemStatus = $"Planilha Excel exportada ({itens.Count} O.S.).";
     }
 
     [RelayCommand]
     private void Voltar() => _navigation.IrParaInicio();
 
     [RelayCommand]
-    private void FecharDetalhe() => Selecionada = null;
+    private void FecharDetalhe() => LinhaSelecionada = null;
+
+    /// <summary>Exporta apenas as O.S. marcadas com checkbox; sem nenhuma marcada, exporta
+    /// todo o resultado filtrado (todas as páginas), não só a página exibida na grade.</summary>
+    private List<OrdemServico> ItensParaExportar()
+    {
+        var selecionados = _todosItens.Where(i => i.Selecionada).Select(i => i.OrdemServico).ToList();
+        return selecionados.Count > 0 ? selecionados : _todosItens.Select(i => i.OrdemServico).ToList();
+    }
 
     private async Task InicializarAsync()
     {
@@ -314,6 +410,35 @@ public partial class BancoDadosViewModel : ViewModelBase, IDisposable
         _debounceBusca.Start();
     }
 
+    /// <summary>Recorta de <see cref="_todosItens"/> a fatia correspondente à página atual
+    /// para dentro de <see cref="Resultados"/>, sem refazer a consulta ao banco.</summary>
+    private void AtualizarPagina()
+    {
+        var totalPaginas = TotalPaginas;
+        if (PaginaAtual > totalPaginas)
+        {
+            PaginaAtual = totalPaginas;
+            return;
+        }
+
+        Resultados.Clear();
+        foreach (var item in _todosItens.Skip((PaginaAtual - 1) * TamanhoPagina).Take(TamanhoPagina))
+            Resultados.Add(item);
+
+        OnPropertyChanged(nameof(TotalPaginas));
+    }
+
+    private OrdemServicoLinhaViewModel CriarLinha(OrdemServico ordemServico)
+    {
+        var linha = new OrdemServicoLinhaViewModel(ordemServico);
+        linha.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(OrdemServicoLinhaViewModel.Selecionada))
+                OnPropertyChanged(nameof(TotalSelecionados));
+        };
+        return linha;
+    }
+
     public void Dispose()
     {
         _debounceBusca.Stop();
@@ -330,4 +455,20 @@ public sealed class BarraDashboardViewModel(string rotulo, int quantidade, doubl
 
     /// <summary>Largura em pixels dentro da faixa fixa de 180px reservada ao gráfico.</summary>
     public double Largura { get; } = Math.Max(4, proporcao * 180);
+}
+
+/// <summary>Envolve uma O.S. com o estado de seleção (checkbox) usado pela grade do Banco de
+/// Dados para escolher quais registros entram na exportação de PDF/Excel.</summary>
+public sealed partial class OrdemServicoLinhaViewModel(OrdemServico ordemServico) : ObservableObject
+{
+    public OrdemServico OrdemServico { get; } = ordemServico;
+
+    [ObservableProperty] private bool _selecionada;
+
+    public string Numero => OrdemServico.Numero;
+    public string Empresa => OrdemServico.Empresa;
+    public string Cidade => OrdemServico.Cidade;
+    public DateOnly RecebimentoSfit => OrdemServico.RecebimentoSfit;
+    public DateOnly DataFinal => OrdemServico.DataFinal;
+    public SituacaoOS Situacao => OrdemServico.Situacao;
 }

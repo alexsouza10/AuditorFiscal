@@ -254,4 +254,44 @@ public class OrdemServico : EntidadeBase
     public void RemoverTag(Guid tagId) => _tags.RemoveAll(t => t.Id == tagId);
 
     public void DefinirHashIntegridade(string hash) => HashIntegridade = Guard.NotNullOrWhiteSpace(hash, nameof(hash));
+
+    /// <summary>Ainda em curso: é destas O.S. que cobramos prazo e movimentação, não das já encerradas.</summary>
+    public bool Ativa => Situacao is SituacaoOS.Agendada or SituacaoOS.EmAndamento or SituacaoOS.Adiada;
+
+    /// <summary>A data final planejada já passou e a O.S. segue aberta — deveria ter sido concluída.</summary>
+    public bool EstaAtrasada(DateOnly referencia) => Ativa && DataFinal < referencia;
+
+    public int DiasAtraso(DateOnly referencia) => EstaAtrasada(referencia) ? referencia.DayNumber - DataFinal.DayNumber : 0;
+
+    /// <summary>Dias desde a última alteração registrada — sinaliza O.S. esquecidas, não só atrasadas.</summary>
+    public int DiasSemMovimentacao(DateOnly referencia) =>
+        Ativa ? Math.Max(0, referencia.DayNumber - DateOnly.FromDateTime(AtualizadoEm.LocalDateTime).DayNumber) : 0;
+
+    /// <summary>
+    /// Checkpoints de prazo (NAD, NCO, data final) que caem dentro da janela de alerta — usado
+    /// para avisos granulares tipo "Prazo NAD vence em 5 dias". Cada etapa é avaliada de forma
+    /// independente porque perder o NAD não significa que o NCO deixou de valer.
+    /// </summary>
+    public IReadOnlyList<(string Etapa, DateOnly Data)> PrazosProximos(DateOnly referencia, int diasJanela)
+    {
+        if (!Ativa)
+            return [];
+
+        (string Etapa, DateOnly Data)[] checkpoints = [("Prazo NAD", PrazoNad), ("Prazo NCO", PrazoNco), ("Data final", DataFinal)];
+        return checkpoints.Where(c => c.Data >= referencia && c.Data <= referencia.AddDays(diasJanela)).ToList();
+    }
+
+    /// <summary>
+    /// Dias até o próximo checkpoint pendente (NAD, NCO ou data final), usado para ordenar e
+    /// filtrar por urgência (ex.: "prazo&lt;5"). Negativo quando todos já passaram.
+    /// </summary>
+    public int? DiasProximoPrazo(DateOnly referencia)
+    {
+        if (!Ativa)
+            return null;
+
+        DateOnly[] checkpoints = [PrazoNad, PrazoNco, DataFinal];
+        var proximo = checkpoints.Where(c => c >= referencia).OrderBy(c => c).Cast<DateOnly?>().FirstOrDefault() ?? DataFinal;
+        return proximo.DayNumber - referencia.DayNumber;
+    }
 }

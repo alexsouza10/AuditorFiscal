@@ -13,6 +13,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <local:SituacaoParaDescricaoConverter x:Key="SituacaoParaDescricao" />
+            <local:FiscalizacaoParaDescricaoConverter x:Key="FiscalizacaoParaDescricao" />
 
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
@@ -26,6 +27,13 @@
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="CalendarDatePicker">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="MinHeight" Value="34" />
+        </Style>
+    </UserControl.Styles>
 
     <DockPanel Margin="20">
 
@@ -50,7 +58,8 @@
                     <StackPanel Spacing="4">
                         <TextBlock Text="Pesquisa rápida" FontSize="11" Opacity="0.6" />
                         <TextBox Text="{Binding TermoBusca}" PlaceholderText="Número, empresa, cidade…"
-                                 AutomationProperties.AutomationId="TxtBusca" />
+                                 AutomationProperties.AutomationId="TxtBusca"
+                                 ToolTip.Tip="Aceita filtros: status:andamento empresa:x cidade:x responsavel:x tag:x prazo&lt;10 atrasadas favoritas hoje semana sem-movimentacao" />
                     </StackPanel>
 
                     <StackPanel Spacing="4">
@@ -71,7 +80,36 @@
                                   HorizontalAlignment="Stretch" PlaceholderText="Todas" />
                     </StackPanel>
 
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Cidade" FontSize="11" Opacity="0.6" />
+                        <TextBox Text="{Binding CidadeFiltro}" PlaceholderText="Todas" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Responsável" FontSize="11" Opacity="0.6" />
+                        <TextBox Text="{Binding ResponsavelFiltro}" PlaceholderText="Todos" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Fiscalização" FontSize="11" Opacity="0.6" />
+                        <ComboBox ItemsSource="{Binding FiscalizacoesFiltro}" SelectedItem="{Binding FiscalizacaoFiltro}"
+                                  HorizontalAlignment="Stretch" PlaceholderText="Todas">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource FiscalizacaoParaDescricao}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Período (data final)" FontSize="11" Opacity="0.6" />
+                        <CalendarDatePicker SelectedDate="{Binding DataInicioFiltro}" PlaceholderText="De" HorizontalAlignment="Stretch" />
+                        <CalendarDatePicker SelectedDate="{Binding DataFimFiltro}" PlaceholderText="Até" HorizontalAlignment="Stretch" Margin="0,4,0,0" />
+                    </StackPanel>
+
                     <CheckBox Content="Somente favoritos" IsChecked="{Binding SomenteFavoritos}" />
+                    <CheckBox Content="Somente atrasadas" IsChecked="{Binding SomenteAtrasadas}" />
                     <Button Content="Limpar filtros" Command="{Binding LimparFiltrosCommand}" HorizontalAlignment="Stretch" />
                 </StackPanel>
             </ScrollViewer>
@@ -79,13 +117,43 @@
             <!-- Resultados + detalhe. O painel de detalhe flutua sobre a grade em vez de
                  ocupar uma coluna própria, para que a lista nunca fique espremida em
                  janelas estreitas e o painel sempre caiba na largura disponível. -->
-            <Grid Grid.Column="1">
+            <Grid Grid.Column="1" RowDefinitions="Auto,*">
+
+                <!-- Seleção para exportação + paginação -->
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,10">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <CheckBox Content="Selecionar todos" IsChecked="{Binding SelecionarTodos}"
+                                  ToolTip.Tip="Marca/desmarca todas as O.S. do filtro atual (todas as páginas) para exportação" />
+                        <TextBlock Text="{Binding TotalSelecionados, StringFormat='{}{0} selecionada(s)'}"
+                                   Opacity="0.7" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <TextBlock Text="Itens por página" Opacity="0.6" VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding TamanhosPagina}" SelectedItem="{Binding TamanhoPagina}" Width="80" />
+                        <Button Content="◀" Command="{Binding PaginaAnteriorCommand}" Padding="8,4" ToolTip.Tip="Página anterior" />
+                        <TextBlock VerticalAlignment="Center">
+                            <Run Text="Página " /><Run Text="{Binding PaginaAtual}" /><Run Text=" de " /><Run Text="{Binding TotalPaginas}" />
+                        </TextBlock>
+                        <Button Content="▶" Command="{Binding ProximaPaginaCommand}" Padding="8,4" ToolTip.Tip="Próxima página" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Grid.Row="1">
                 <Border BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1" CornerRadius="8">
-                    <DataGrid ItemsSource="{Binding Resultados}" SelectedItem="{Binding Selecionada}"
+                    <DataGrid ItemsSource="{Binding Resultados}" SelectedItem="{Binding LinhaSelecionada}"
                               AutoGenerateColumns="False" IsReadOnly="True"
                               GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                               AutomationProperties.AutomationId="GridResultados">
                         <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="✓" Width="40">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Selecionada}" HorizontalAlignment="Center"
+                                                  ToolTip.Tip="Selecionar para exportação" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Número" Binding="{Binding Numero}" Width="120" />
                             <DataGridTextColumn Header="Empresa" Binding="{Binding Empresa}" Width="*" />
                             <DataGridTextColumn Header="Cidade" Binding="{Binding Cidade}" Width="130" />
@@ -151,6 +219,7 @@
                         </ScrollViewer>
                     </DockPanel>
                 </Border>
+                </Grid>
             </Grid>
 
         </Grid>

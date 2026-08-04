@@ -110,13 +110,29 @@ public static class RelatorioBuilder
         foreach (var grupo in ordens.GroupBy(o => o.Situacao).OrderBy(g => g.Key))
             linhas.Add(new LinhaRelatorio(EstiloLinha.Campo, grupo.Key.Descricao(), grupo.Count().ToString()));
 
-        linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
-        linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Ordens de serviço"));
-
+        // Cada O.S. entra com seus próprios campos (rótulo/valor curtos) em vez de uma única
+        // linha resumida — um rótulo com data+número já ultrapassava a largura reservada e
+        // sobrepunha o texto do valor desenhado ao lado.
         foreach (var os in ordens.OrderBy(o => o.RecebimentoSfit))
-            linhas.Add(new LinhaRelatorio(EstiloLinha.Campo,
-                $"{os.RecebimentoSfit:dd/MM/yyyy} → {os.DataFinal:dd/MM/yyyy}  {os.Numero}",
-                $"{os.Empresa} — {os.Cidade} — {os.Situacao.Descricao()}"));
+        {
+            linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
+            linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, $"OS {os.Numero} — {os.Empresa}"));
+
+            AdicionarCampo(linhas, "CNPJ", os.Cnpj.Formatado());
+            AdicionarCampo(linhas, "Endereço", os.Endereco);
+            AdicionarCampo(linhas, "Cidade", os.Cidade);
+            AdicionarCampo(linhas, "Responsável", os.Responsavel);
+            AdicionarCampo(linhas, "Situação", os.Situacao.Descricao());
+            AdicionarCampo(linhas, "Fiscalização", os.Fiscalizacao.Descricao());
+            AdicionarCampo(linhas, "1. Recebimento SFIT", os.RecebimentoSfit.ToString("dd/MM/yyyy"));
+            AdicionarCampo(linhas, "2. Abertura SFIT", os.AberturaSfit.ToString("dd/MM/yyyy"));
+            AdicionarCampo(linhas, "3. Fiscalização", os.DataFiscalizacao.ToString("dd/MM/yyyy"));
+            AdicionarCampo(linhas, "4. Prazo NAD", os.PrazoNad.ToString("dd/MM/yyyy"));
+            AdicionarCampo(linhas, "5. Prazo NCO", os.PrazoNco.ToString("dd/MM/yyyy"));
+            AdicionarCampo(linhas, "6. Elaboração dos autos", os.ElaboracaoAutos.ToString("dd/MM/yyyy"));
+            AdicionarCampo(linhas, "7. Data final", os.DataFinal.ToString("dd/MM/yyyy"));
+            AdicionarCampo(linhas, "Observações", os.Observacoes);
+        }
 
         return new DocumentoRelatorio(titulo, linhas);
     }
