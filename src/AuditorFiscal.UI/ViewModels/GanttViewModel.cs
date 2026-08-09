@@ -44,16 +44,76 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private DateTime? _filtroInicio;
     [ObservableProperty] private DateTime? _filtroFim;
     [ObservableProperty] private int _periodoSelecionado = PeriodoPadraoMeses;
+    [ObservableProperty] private bool _maximizado;
+
+    /// <summary>Altura real (em pixels) da área de linhas do gráfico, informada pela View a
+    /// cada redimensionamento — é a partir dela que RecalcularAlturasLinha decide o quanto
+    /// cada linha precisa encolher para caber todas as O.S. sem scroll.</summary>
+    [ObservableProperty] private double _alturaDisponivel;
+    [ObservableProperty] private PapelAuditor? _papelAuditorFiltro;
 
     public ObservableCollection<MesGanttViewModel> Meses { get; } = [];
     public ObservableCollection<LinhaGanttViewModel> Linhas { get; } = [];
     public IReadOnlyList<SituacaoOS> SituacoesDisponiveis { get; } = Enum.GetValues<SituacaoOS>();
+
+    /// <summary>Primeira opção nula vira "Todos" no ComboBox — mesmo padrão do filtro de
+    /// Fiscalização no Banco de Dados.</summary>
+    public IReadOnlyList<PapelAuditor?> PapeisAuditorFiltro { get; } =
+        new PapelAuditor?[] { null }.Concat(Enum.GetValues<PapelAuditor>().Cast<PapelAuditor?>()).ToList();
 
     /// <summary>Filtro de situação com múltipla seleção, compartilhado com a tela de Banco de
     /// Dados (mesmo componente visual e mesma lógica de invariante "Todas").</summary>
     public SituacaoMultiSelectViewModel SituacaoFiltro { get; } = new();
 
     public bool TemSelecao => Selecionada is not null;
+
+    /// <summary>O painel de detalhes aparece sempre que há uma O.S. selecionada, maximizado ou
+    /// não — maximizar só comprime a altura das linhas para caber todas sem scroll, não mexe
+    /// em nenhum painel.</summary>
+    public bool MostrarPainelDetalhe => TemSelecao;
+
+    /// <summary>Contagem das O.S. exibidas após os filtros atuais — o auditor precisa saber se
+    /// está vendo "tudo" ou só um recorte antes de tirar qualquer conclusão do gráfico.</summary>
+    public string ContagemTexto => Linhas.Count == 1
+        ? "1 O.S. exibida · clique numa barra para ver detalhes"
+        : $"{Linhas.Count} O.S. exibidas · clique numa barra para ver detalhes";
+
+    public string IconeMaximizar => Maximizado ? "🗗" : "⛶";
+    public string TituloMaximizar => Maximizado ? "Restaurar cronograma" : "Maximizar cronograma (comprime as linhas para caber todas as O.S. sem scroll)";
+
+    partial void OnMaximizadoChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IconeMaximizar));
+        OnPropertyChanged(nameof(TituloMaximizar));
+        RecalcularAlturasLinha();
+    }
+
+    partial void OnAlturaDisponivelChanged(double value) => RecalcularAlturasLinha();
+
+    /// <summary>Fora do modo maximizado, cada linha mantém os 92px de sempre (a lista rola
+    /// normalmente). Maximizado, divide a altura real do viewport pela quantidade de O.S.
+    /// visíveis para que todas caibam sem scroll — sem piso mínimo, porque exibir a lista
+    /// inteira de uma vez é o objetivo do botão, mesmo que as linhas fiquem bem finas.</summary>
+    private void RecalcularAlturasLinha()
+    {
+        const double AlturaLinhaPadrao = 92.0;
+        const double AlturaBarraPadrao = 40.0;
+        const double AlturaBarraMinima = 2.0;
+        const double ReservaParaNcre = 16.0;
+        const double LimiarRotuloVisivel = 40.0;
+
+        double alturaLinha;
+        if (!Maximizado || Linhas.Count == 0 || AlturaDisponivel <= 0)
+            alturaLinha = AlturaLinhaPadrao;
+        else
+            alturaLinha = Math.Min(AlturaLinhaPadrao, AlturaDisponivel / Linhas.Count);
+
+        var alturaBarra = Math.Clamp(alturaLinha - ReservaParaNcre, AlturaBarraMinima, AlturaBarraPadrao);
+        var rotuloVisivel = alturaLinha >= LimiarRotuloVisivel;
+
+        foreach (var linha in Linhas)
+            linha.AtualizarAltura(alturaLinha, alturaBarra, rotuloVisivel);
+    }
 
     public GanttViewModel(
         OrdemServicoService ordemServicoService,
@@ -94,8 +154,31 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         _debounceBusca.Start();
     }
 
+    partial void OnPapelAuditorFiltroChanged(PapelAuditor? value)
+    {
+        _debounceBusca.Stop();
+        _debounceBusca.Start();
+    }
+
     [RelayCommand]
     private void LimparBusca() => FiltroTexto = null;
+
+    /// <summary>Reseta busca, situação e período personalizado para o padrão (12 meses
+    /// centralizados no mês atual) — mesmo comportamento do "Limpar filtros" do Banco de Dados.</summary>
+    [RelayCommand]
+    private async Task LimparFiltrosAsync()
+    {
+        FiltroTexto = null;
+        SituacaoFiltro.TodasSituacoes = true;
+        PapelAuditorFiltro = null;
+        FiltroInicio = null;
+        FiltroFim = null;
+        _mesesVisiveis = PeriodoPadraoMeses;
+        PeriodoSelecionado = PeriodoPadraoMeses;
+
+        CentralizarJanelaNoMesAtual(_mesesVisiveis);
+        await CarregarAsync();
+    }
 
     [RelayCommand]
     private async Task PeriodoAnteriorAsync()
@@ -162,6 +245,9 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private void AlternarMaximizado() => Maximizado = !Maximizado;
+
+    [RelayCommand]
     private void SelecionarLinha(LinhaGanttViewModel linha)
     {
         if (Selecionada is not null)
@@ -172,6 +258,7 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         SituacaoEdicao = linha.OrdemServico.Situacao;
 
         OnPropertyChanged(nameof(TemSelecao));
+        OnPropertyChanged(nameof(MostrarPainelDetalhe));
     }
 
     [RelayCommand]
@@ -277,6 +364,7 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
 
         Selecionada = null;
         OnPropertyChanged(nameof(TemSelecao));
+        OnPropertyChanged(nameof(MostrarPainelDetalhe));
     }
 
     [RelayCommand]
@@ -301,6 +389,9 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         var situacoesSelecionadas = SituacaoFiltro.Selecionadas;
         if (situacoesSelecionadas.Count > 0)
             ordens = ordens.Where(o => situacoesSelecionadas.Contains(o.Situacao)).ToList();
+
+        if (PapelAuditorFiltro.HasValue)
+            ordens = ordens.Where(o => o.PapelAuditor == PapelAuditorFiltro.Value).ToList();
 
         TituloPeriodo = MontarTitulo(_inicioJanela, _fimJanela);
 
@@ -334,8 +425,12 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
                 selecionar = linha;
         }
 
+        RecalcularAlturasLinha();
+        OnPropertyChanged(nameof(ContagemTexto));
+
         Selecionada = null;
         OnPropertyChanged(nameof(TemSelecao));
+        OnPropertyChanged(nameof(MostrarPainelDetalhe));
 
         if (selecionar is not null)
             SelecionarLinha(selecionar);

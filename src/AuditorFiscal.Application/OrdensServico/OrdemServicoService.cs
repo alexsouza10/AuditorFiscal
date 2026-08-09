@@ -46,10 +46,11 @@ public class OrdemServicoService(
             dto.DataFinal,
             clock.UtcNow,
             dto.Observacoes,
-            CriarCoordenada(dto.Latitude, dto.Longitude));
+            CriarCoordenada(dto.Latitude, dto.Longitude),
+            dto.PapelAuditor);
 
         if (dto.TemNcre)
-            ordemServico.DefinirNcre(true, dto.PrazoNcre, clock.UtcNow);
+            ordemServico.DefinirNcre(true, dto.NcreInicio, dto.NcreFim, clock.UtcNow);
 
         await AnexarArquivosAsync(ordemServico, arquivos, ct);
         AtualizarHashIntegridade(ordemServico);
@@ -86,6 +87,7 @@ public class OrdemServicoService(
             dto.Cidade,
             dto.Responsavel,
             dto.Fiscalizacao,
+            dto.PapelAuditor,
             dto.RecebimentoSfit,
             dto.AberturaSfit,
             dto.DataFiscalizacao,
@@ -97,8 +99,8 @@ public class OrdemServicoService(
             CriarCoordenada(dto.Latitude, dto.Longitude),
             clock.UtcNow);
 
-        if (dto.TemNcre != ordemServico.TemNcre || dto.PrazoNcre != ordemServico.PrazoNcre)
-            ordemServico.DefinirNcre(dto.TemNcre, dto.PrazoNcre, clock.UtcNow);
+        if (dto.TemNcre != ordemServico.TemNcre || dto.NcreInicio != ordemServico.NcreInicio || dto.NcreFim != ordemServico.NcreFim)
+            ordemServico.DefinirNcre(dto.TemNcre, dto.NcreInicio, dto.NcreFim, clock.UtcNow);
 
         await AnexarArquivosAsync(ordemServico, novosArquivos, ct);
         AtualizarHashIntegridade(ordemServico);

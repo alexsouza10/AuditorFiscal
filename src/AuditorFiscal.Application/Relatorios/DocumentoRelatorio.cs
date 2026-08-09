@@ -43,6 +43,7 @@ public static class RelatorioBuilder
         linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Auditoria"));
         AdicionarCampo(linhas, "Situação", os.Situacao.Descricao());
         AdicionarCampo(linhas, "Fiscalização", os.Fiscalizacao.Descricao());
+        AdicionarCampo(linhas, "Auditor", os.PapelAuditor.Descricao());
 
         linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
         linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Fluxo SFIT"));
@@ -54,8 +55,8 @@ public static class RelatorioBuilder
         AdicionarCampo(linhas, "6. Elaboração dos autos", os.ElaboracaoAutos.ToString("dd/MM/yyyy"));
         AdicionarCampo(linhas, "7. Data final", os.DataFinal.ToString("dd/MM/yyyy"));
 
-        if (os.TemNcre && os.PrazoNcre is not null)
-            AdicionarCampo(linhas, "Prazo NCRE", os.PrazoNcre.Value.ToString("dd/MM/yyyy"));
+        if (os.TemNcre && os.NcreInicio is not null && os.NcreFim is not null)
+            AdicionarCampo(linhas, "NCRE", $"{os.NcreInicio.Value:dd/MM/yyyy} a {os.NcreFim.Value:dd/MM/yyyy}");
 
         if (os.Coordenada is not null)
             AdicionarCampo(linhas, "Coordenadas", $"{os.Coordenada.Latitude:F6}, {os.Coordenada.Longitude:F6}");
@@ -124,6 +125,7 @@ public static class RelatorioBuilder
             AdicionarCampo(linhas, "Responsável", os.Responsavel);
             AdicionarCampo(linhas, "Situação", os.Situacao.Descricao());
             AdicionarCampo(linhas, "Fiscalização", os.Fiscalizacao.Descricao());
+            AdicionarCampo(linhas, "Auditor", os.PapelAuditor.Descricao());
             AdicionarCampo(linhas, "1. Recebimento SFIT", os.RecebimentoSfit.ToString("dd/MM/yyyy"));
             AdicionarCampo(linhas, "2. Abertura SFIT", os.AberturaSfit.ToString("dd/MM/yyyy"));
             AdicionarCampo(linhas, "3. Fiscalização", os.DataFiscalizacao.ToString("dd/MM/yyyy"));

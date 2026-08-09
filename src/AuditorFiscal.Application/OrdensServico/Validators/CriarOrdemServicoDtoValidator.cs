@@ -35,10 +35,15 @@ public class CriarOrdemServicoDtoValidator : AbstractValidator<CriarOrdemServico
         RuleFor(x => x.DataFinal).GreaterThanOrEqualTo(x => x.ElaboracaoAutos)
             .WithMessage("Data final não pode ser antes da elaboração dos autos.");
 
-        RuleFor(x => x.PrazoNcre).NotNull().When(x => x.TemNcre)
-            .WithMessage("Informe o prazo do NCRE.");
-        RuleFor(x => x.PrazoNcre).LessThanOrEqualTo(x => x.DataFinal)
-            .When(x => x.TemNcre && x.PrazoNcre.HasValue)
-            .WithMessage("Prazo do NCRE não pode ser depois da data final.");
+        RuleFor(x => x.NcreInicio).NotNull().When(x => x.TemNcre)
+            .WithMessage("Informe a data de início do NCRE.");
+        RuleFor(x => x.NcreFim).NotNull().When(x => x.TemNcre)
+            .WithMessage("Informe a data de fim do NCRE.");
+        RuleFor(x => x.NcreFim).GreaterThanOrEqualTo(x => x.NcreInicio!.Value)
+            .When(x => x.TemNcre && x.NcreInicio.HasValue && x.NcreFim.HasValue)
+            .WithMessage("Fim do NCRE não pode ser antes do início.");
+        RuleFor(x => x.NcreFim).LessThanOrEqualTo(x => x.DataFinal)
+            .When(x => x.TemNcre && x.NcreFim.HasValue)
+            .WithMessage("Fim do NCRE não pode ser depois da data final.");
     }
 }

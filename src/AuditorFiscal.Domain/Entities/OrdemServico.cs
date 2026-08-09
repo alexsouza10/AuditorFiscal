@@ -22,6 +22,10 @@ public class OrdemServico : EntidadeBase
     public SituacaoOS Situacao { get; private set; }
     public TipoFiscalizacao Fiscalizacao { get; private set; }
 
+    /// <summary>Não obrigatório: por padrão toda O.S. tem um único auditor "Principal";
+    /// só passa a valer quando há de fato um segundo auditor apoiando o trabalho.</summary>
+    public PapelAuditor PapelAuditor { get; private set; } = PapelAuditor.Principal;
+
     public DateOnly RecebimentoSfit { get; private set; }
     public DateOnly AberturaSfit { get; private set; }
     public DateOnly DataFiscalizacao { get; private set; }
@@ -36,11 +40,13 @@ public class OrdemServico : EntidadeBase
     public bool Favorito { get; private set; }
 
     /// <summary>
-    /// NCRE: prazo-limite adicional (fora do fluxo SFIT padrão) para cumprir a ordem.
+    /// NCRE: período adicional (fora do fluxo SFIT padrão) para cumprir a ordem, com início
+    /// e fim próprios — por isso vira uma barra no Gantt, não só um marcador pontual.
     /// Opcional — quando não cadastrado, o Gantt exibe um alerta lembrando o auditor.
     /// </summary>
     public bool TemNcre { get; private set; }
-    public DateOnly? PrazoNcre { get; private set; }
+    public DateOnly? NcreInicio { get; private set; }
+    public DateOnly? NcreFim { get; private set; }
 
     /// <summary>
     /// Projeção somente leitura das colunas Latitude/Longitude. As coordenadas ficam como
@@ -84,7 +90,8 @@ public class OrdemServico : EntidadeBase
         DateOnly dataFinal,
         DateTimeOffset momento,
         string? observacoes = null,
-        Coordenada? coordenada = null)
+        Coordenada? coordenada = null,
+        PapelAuditor papelAuditor = PapelAuditor.Principal)
     {
         Numero = Guard.NotNullOrWhiteSpace(numero, nameof(numero));
         Empresa = Guard.NotNullOrWhiteSpace(empresa, nameof(empresa));
@@ -93,6 +100,7 @@ public class OrdemServico : EntidadeBase
         Cidade = Guard.NotNullOrWhiteSpace(cidade, nameof(cidade));
         Responsavel = string.IsNullOrWhiteSpace(responsavel) ? null : responsavel.Trim();
         Fiscalizacao = fiscalizacao;
+        PapelAuditor = papelAuditor;
         RecebimentoSfit = recebimentoSfit;
         AberturaSfit = aberturaSfit;
         DataFiscalizacao = dataFiscalizacao;
@@ -118,6 +126,7 @@ public class OrdemServico : EntidadeBase
         string cidade,
         string? responsavel,
         TipoFiscalizacao fiscalizacao,
+        PapelAuditor papelAuditor,
         DateOnly recebimentoSfit,
         DateOnly aberturaSfit,
         DateOnly dataFiscalizacao,
@@ -141,6 +150,7 @@ public class OrdemServico : EntidadeBase
         RegistrarSeMudou(alteracoes, "Cidade", Cidade, cidade);
         RegistrarSeMudou(alteracoes, "Responsável", Responsavel, responsavelNormalizado);
         RegistrarSeMudou(alteracoes, "Fiscalização", Fiscalizacao.ToString(), fiscalizacao.ToString());
+        RegistrarSeMudou(alteracoes, "Auditor", PapelAuditor.ToString(), papelAuditor.ToString());
         RegistrarSeMudou(alteracoes, "Recebimento SFIT", RecebimentoSfit.ToString("dd/MM/yyyy"), recebimentoSfit.ToString("dd/MM/yyyy"));
         RegistrarSeMudou(alteracoes, "Abertura SFIT", AberturaSfit.ToString("dd/MM/yyyy"), aberturaSfit.ToString("dd/MM/yyyy"));
         RegistrarSeMudou(alteracoes, "Data da fiscalização", DataFiscalizacao.ToString("dd/MM/yyyy"), dataFiscalizacao.ToString("dd/MM/yyyy"));
@@ -162,6 +172,7 @@ public class OrdemServico : EntidadeBase
         Cidade = Guard.NotNullOrWhiteSpace(cidade, nameof(cidade));
         Responsavel = responsavelNormalizado;
         Fiscalizacao = fiscalizacao;
+        PapelAuditor = papelAuditor;
         RecebimentoSfit = recebimentoSfit;
         AberturaSfit = aberturaSfit;
         DataFiscalizacao = dataFiscalizacao;
@@ -215,14 +226,15 @@ public class OrdemServico : EntidadeBase
         _timeline.Add(new TimelineEvento(Id, $"Cronograma adiado em {dias} dia(s).", momento));
     }
 
-    public void DefinirNcre(bool temNcre, DateOnly? prazoNcre, DateTimeOffset momento)
+    public void DefinirNcre(bool temNcre, DateOnly? ncreInicio, DateOnly? ncreFim, DateTimeOffset momento)
     {
         TemNcre = temNcre;
-        PrazoNcre = temNcre ? prazoNcre : null;
+        NcreInicio = temNcre ? ncreInicio : null;
+        NcreFim = temNcre ? ncreFim : null;
         MarcarAtualizado(momento);
 
         _timeline.Add(new TimelineEvento(Id, temNcre
-            ? $"NCRE cadastrado — prazo em {prazoNcre:dd/MM/yyyy}."
+            ? $"NCRE cadastrado — de {ncreInicio:dd/MM/yyyy} até {ncreFim:dd/MM/yyyy}."
             : "NCRE removido.", momento));
     }
 

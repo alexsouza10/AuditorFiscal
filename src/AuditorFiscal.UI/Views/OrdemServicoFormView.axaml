@@ -13,6 +13,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <local:SituacaoParaDescricaoConverter x:Key="SituacaoParaDescricao" />
+            <local:PapelAuditorParaDescricaoConverter x:Key="PapelAuditorParaDescricao" />
 
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
@@ -135,6 +136,20 @@
                             <TextBox Text="{Binding Responsavel}" />
                         </StackPanel>
                         <StackPanel Grid.Column="4">
+                            <TextBlock Text="Auditor (opcional)" Classes="fieldLabel" />
+                            <ComboBox ItemsSource="{Binding PapeisAuditorDisponiveis}"
+                                      SelectedItem="{Binding PapelAuditorSelecionado}" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource PapelAuditorParaDescricao}}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,16,2*">
+                        <StackPanel Grid.Column="0">
                             <TextBlock Text="CEP (opcional)" Classes="fieldLabel" />
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBox Grid.Column="0" Text="{Binding Cep}" PlaceholderText="00000-000" />
@@ -144,12 +159,11 @@
                             <TextBlock Text="{Binding MensagemCep}" FontSize="11" Foreground="#EF4444"
                                        TextWrapping="Wrap" IsVisible="{Binding MensagemCep, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
                         </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Endereço" Classes="fieldLabel" />
+                            <TextBox Text="{Binding Endereco}" />
+                        </StackPanel>
                     </Grid>
-
-                    <StackPanel>
-                        <TextBlock Text="Endereço" Classes="fieldLabel" />
-                        <TextBox Text="{Binding Endereco}" />
-                    </StackPanel>
 
                     <Grid ColumnDefinitions="*,16,*,16,*">
                         <StackPanel Grid.Column="0">
@@ -226,10 +240,16 @@
                                 </StackPanel>
                             </Grid>
 
-                            <StackPanel IsVisible="{Binding TemNcre}" Margin="0,4,0,0">
-                                <TextBlock Text="Prazo do NCRE" Classes="fieldLabel" />
-                                <CalendarDatePicker SelectedDate="{Binding PrazoNcre}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-                            </StackPanel>
+                            <Grid ColumnDefinitions="*,10,*" IsVisible="{Binding TemNcre}" Margin="0,4,0,0">
+                                <StackPanel Grid.Column="0" MinWidth="120">
+                                    <TextBlock Text="Início do NCRE" Classes="fieldLabel" />
+                                    <CalendarDatePicker SelectedDate="{Binding NcreInicio}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" MinWidth="120">
+                                    <TextBlock Text="Fim do NCRE" Classes="fieldLabel" />
+                                    <CalendarDatePicker SelectedDate="{Binding NcreFim}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Border>
 

@@ -6,12 +6,12 @@
 .DESCRIPTION
     Sem assinatura nenhuma, o Windows SmartScreen bloqueia o .exe com "Editor
     desconhecido" em qualquer máquina que não seja a de quem publicou. Assinar com um
-    certificado autoassinado já troca "Editor desconhecido" por "Apura Fiscal" no
+    certificado autoassinado já troca "Editor desconhecido" por "Gerenciador de AFT" no
     aviso, e é o primeiro passo caso um certificado pago (que elimina o aviso de vez,
     sem nenhuma etapa manual) seja comprado no futuro.
 
     Confiar de fato no certificado em cada máquina nova é responsabilidade do próprio
-    Apura Fiscal.exe na primeira execução (ver Program.cs,
+    Gerenciador de AFT.exe na primeira execução (ver Program.cs,
     ConfiarNoProprioCertificadoSeNecessario) — por isso este script não precisa
     exportar .cer nem gerar instruções à parte, só assinar.
 
@@ -27,7 +27,7 @@ param(
     [Parameter(Mandatory)]
     [string]$PastaPublicacao,
 
-    [string]$AssuntoCertificado = "CN=Apura Fiscal (autoassinado)"
+    [string]$AssuntoCertificado = "CN=Gerenciador de AFT (autoassinado)"
 )
 
 $ErrorActionPreference = "Stop"
@@ -51,7 +51,7 @@ function Obter-OuCriarCertificado {
         -KeyUsage DigitalSignature `
         -KeyExportPolicy Exportable `
         -NotAfter (Get-Date).AddYears(5) `
-        -FriendlyName "Apura Fiscal - assinatura de código"
+        -FriendlyName "Gerenciador de AFT - assinatura de código"
 }
 
 $certificado = Obter-OuCriarCertificado

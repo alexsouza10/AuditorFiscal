@@ -32,6 +32,7 @@ public class OrdemServicoConfiguration : IEntityTypeConfiguration<OrdemServico>
         builder.Ignore(x => x.Coordenada);
 
         builder.Property(x => x.Fiscalizacao).HasConversion<string>().HasMaxLength(20);
+        builder.Property(x => x.PapelAuditor).HasConversion<string>().HasMaxLength(20);
 
         builder.HasMany(x => x.Fotos)
             .WithOne()

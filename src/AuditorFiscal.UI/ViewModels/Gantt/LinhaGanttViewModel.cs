@@ -23,8 +23,8 @@ public partial class LinhaGanttViewModel : ObservableObject
 
     public bool TemNcre => OrdemServico.TemNcre;
 
-    public string NcreTexto => OrdemServico.TemNcre && OrdemServico.PrazoNcre.HasValue
-        ? $"NCRE: {OrdemServico.PrazoNcre.Value:dd/MM/yyyy}"
+    public string NcreTexto => OrdemServico.TemNcre && OrdemServico.NcreInicio.HasValue && OrdemServico.NcreFim.HasValue
+        ? $"NCRE: {OrdemServico.NcreInicio.Value:dd/MM/yyyy} a {OrdemServico.NcreFim.Value:dd/MM/yyyy}"
         : "NCRE: não informado";
 
     /// <summary>Margem esquerda da barra, em proporção da largura total da janela visível.</summary>
@@ -33,13 +33,51 @@ public partial class LinhaGanttViewModel : ObservableObject
     /// <summary>Largura total da barra, em proporção da largura total da janela visível.</summary>
     public double LarguraTotal { get; }
 
-    /// <summary>Posição da barrinha azul do NCRE (marcador), na mesma escala de MargemEsquerda.</summary>
+    /// <summary>Margem esquerda da barra do NCRE, na mesma escala de MargemEsquerda — acompanha a
+    /// barra principal, um pouco abaixo dela, do início ao fim do período do NCRE.</summary>
     public double MargemNcre { get; }
+
+    /// <summary>Largura da barra do NCRE, na mesma escala de LarguraTotal.</summary>
+    public double LarguraNcre { get; }
 
     public IReadOnlyList<SegmentoGanttViewModel> Segmentos { get; }
 
     [ObservableProperty]
     private bool _selecionada;
+
+    /// <summary>Altura da linha em pixels. Fixa em 92 fora do modo maximizado; recalculada
+    /// pelo GanttViewModel (ver RecalcularAlturasLinha) quando maximizado, dividindo a altura
+    /// real do viewport pela quantidade de O.S. visíveis — assim todas cabem sem scroll.</summary>
+    [ObservableProperty]
+    private double _alturaLinha = 92.0;
+
+    /// <summary>Altura da barra colorida e do marcador de Data final, acompanhando AlturaLinha
+    /// (reserva espaço para a faixa do NCRE logo abaixo em vez de transbordar sobre a linha seguinte).</summary>
+    [ObservableProperty]
+    private double _alturaBarra = 40.0;
+
+    /// <summary>Altura da faixa do NCRE — proporcional a AlturaBarra em vez de fixa, senão no
+    /// modo maximizado (linhas bem comprimidas) ela ficava enorme perto da barra principal
+    /// encolhida, parecendo um elemento quebrado em vez de só mais uma etapa do cronograma.</summary>
+    [ObservableProperty]
+    private double _alturaNcre = 10.0;
+
+    /// <summary>Esconde o rótulo (empresa/número) sobreposto quando a linha fica pequena demais
+    /// para o texto caber de forma legível — a cor e a posição da barra já bastam nesse ponto.</summary>
+    [ObservableProperty]
+    private bool _rotuloVisivel = true;
+
+    /// <summary>Propaga a altura calculada pelo GanttViewModel para esta linha e seus segmentos.</summary>
+    public void AtualizarAltura(double alturaLinha, double alturaBarra, bool rotuloVisivel)
+    {
+        AlturaLinha = alturaLinha;
+        AlturaBarra = alturaBarra;
+        RotuloVisivel = rotuloVisivel;
+        AlturaNcre = Math.Clamp(alturaBarra * 0.4, 3.0, 10.0);
+
+        foreach (var segmento in Segmentos)
+            segmento.AlturaBarra = alturaBarra;
+    }
 
     public LinhaGanttViewModel(OrdemServico ordemServico, DateOnly inicioJanela, DateOnly fimJanela)
     {
@@ -53,15 +91,19 @@ public partial class LinhaGanttViewModel : ObservableObject
         MargemEsquerda = (inicioBarra.DayNumber - inicioJanela.DayNumber) / (double)totalDiasJanela;
         LarguraTotal = Math.Max(0.004, (fimBarra.DayNumber - inicioBarra.DayNumber) / (double)totalDiasJanela);
 
-        if (ordemServico.TemNcre && ordemServico.PrazoNcre.HasValue)
+        if (ordemServico.TemNcre && ordemServico.NcreInicio.HasValue && ordemServico.NcreFim.HasValue)
         {
-            var dataNcre = Menor(Maior(ordemServico.PrazoNcre.Value, inicioJanela), fimJanela);
-            MargemNcre = (dataNcre.DayNumber - inicioJanela.DayNumber) / (double)totalDiasJanela;
+            var inicioNcre = Maior(ordemServico.NcreInicio.Value, inicioJanela);
+            var fimNcre = Menor(ordemServico.NcreFim.Value, fimJanela);
+            MargemNcre = (inicioNcre.DayNumber - inicioJanela.DayNumber) / (double)totalDiasJanela;
+            LarguraNcre = Math.Max(0.004, (fimNcre.DayNumber - inicioNcre.DayNumber) / (double)totalDiasJanela);
         }
 
         // Cada segmento é recortado para a mesma janela visível da barra e medido como
         // proporção da janela inteira — a mesma escala usada por MargemEsquerda/LarguraTotal.
-        // Esquema de cores 1-6 do cronograma: 1 cinza, 2 azul, 3 verde, 4 amarelo, 5 laranja, 6 vermelho.
+        // Esquema de cores 1-6 do cronograma: 1 cinza, 2 azul, 3 verde, 4 amarelo, 5 laranja, 6 marrom.
+        // Data final é um prazo à parte (não uma etapa com duração): vira o marcador vermelho
+        // fino na ponta direita da barra, desenhado na view — por isso não tem cor aqui.
         Segmentos =
         [
             CriarSegmento("#D4D4D8", "Recebimento SFIT", ordemServico.RecebimentoSfit, ordemServico.AberturaSfit, inicioJanela, fimJanela, totalDiasJanela),
@@ -69,7 +111,7 @@ public partial class LinhaGanttViewModel : ObservableObject
             CriarSegmento("#22C55E", "Fiscalização", ordemServico.DataFiscalizacao, ordemServico.PrazoNad, inicioJanela, fimJanela, totalDiasJanela),
             CriarSegmento("#EAB308", "Prazo NAD", ordemServico.PrazoNad, ordemServico.PrazoNco, inicioJanela, fimJanela, totalDiasJanela),
             CriarSegmento("#F97316", "Prazo NCO", ordemServico.PrazoNco, ordemServico.ElaboracaoAutos, inicioJanela, fimJanela, totalDiasJanela),
-            CriarSegmento("#EF4444", "Autos / Final", ordemServico.ElaboracaoAutos, ordemServico.DataFinal, inicioJanela, fimJanela, totalDiasJanela)
+            CriarSegmento("#92400E", "Elaboração dos autos", ordemServico.ElaboracaoAutos, ordemServico.DataFinal, inicioJanela, fimJanela, totalDiasJanela)
         ];
     }
 
