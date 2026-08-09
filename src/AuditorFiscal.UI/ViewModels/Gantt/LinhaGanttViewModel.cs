@@ -45,6 +45,40 @@ public partial class LinhaGanttViewModel : ObservableObject
     [ObservableProperty]
     private bool _selecionada;
 
+    /// <summary>Altura da linha em pixels. Fixa em 92 fora do modo maximizado; recalculada
+    /// pelo GanttViewModel (ver RecalcularAlturasLinha) quando maximizado, dividindo a altura
+    /// real do viewport pela quantidade de O.S. visíveis — assim todas cabem sem scroll.</summary>
+    [ObservableProperty]
+    private double _alturaLinha = 92.0;
+
+    /// <summary>Altura da barra colorida e do marcador de Data final, acompanhando AlturaLinha
+    /// (reserva espaço para a faixa do NCRE logo abaixo em vez de transbordar sobre a linha seguinte).</summary>
+    [ObservableProperty]
+    private double _alturaBarra = 40.0;
+
+    /// <summary>Altura da faixa do NCRE — proporcional a AlturaBarra em vez de fixa, senão no
+    /// modo maximizado (linhas bem comprimidas) ela ficava enorme perto da barra principal
+    /// encolhida, parecendo um elemento quebrado em vez de só mais uma etapa do cronograma.</summary>
+    [ObservableProperty]
+    private double _alturaNcre = 10.0;
+
+    /// <summary>Esconde o rótulo (empresa/número) sobreposto quando a linha fica pequena demais
+    /// para o texto caber de forma legível — a cor e a posição da barra já bastam nesse ponto.</summary>
+    [ObservableProperty]
+    private bool _rotuloVisivel = true;
+
+    /// <summary>Propaga a altura calculada pelo GanttViewModel para esta linha e seus segmentos.</summary>
+    public void AtualizarAltura(double alturaLinha, double alturaBarra, bool rotuloVisivel)
+    {
+        AlturaLinha = alturaLinha;
+        AlturaBarra = alturaBarra;
+        RotuloVisivel = rotuloVisivel;
+        AlturaNcre = Math.Clamp(alturaBarra * 0.4, 3.0, 10.0);
+
+        foreach (var segmento in Segmentos)
+            segmento.AlturaBarra = alturaBarra;
+    }
+
     public LinhaGanttViewModel(OrdemServico ordemServico, DateOnly inicioJanela, DateOnly fimJanela)
     {
         OrdemServico = ordemServico;

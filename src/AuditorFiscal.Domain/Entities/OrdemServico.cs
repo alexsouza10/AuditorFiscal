@@ -22,6 +22,10 @@ public class OrdemServico : EntidadeBase
     public SituacaoOS Situacao { get; private set; }
     public TipoFiscalizacao Fiscalizacao { get; private set; }
 
+    /// <summary>Não obrigatório: por padrão toda O.S. tem um único auditor "Principal";
+    /// só passa a valer quando há de fato um segundo auditor apoiando o trabalho.</summary>
+    public PapelAuditor PapelAuditor { get; private set; } = PapelAuditor.Principal;
+
     public DateOnly RecebimentoSfit { get; private set; }
     public DateOnly AberturaSfit { get; private set; }
     public DateOnly DataFiscalizacao { get; private set; }
@@ -86,7 +90,8 @@ public class OrdemServico : EntidadeBase
         DateOnly dataFinal,
         DateTimeOffset momento,
         string? observacoes = null,
-        Coordenada? coordenada = null)
+        Coordenada? coordenada = null,
+        PapelAuditor papelAuditor = PapelAuditor.Principal)
     {
         Numero = Guard.NotNullOrWhiteSpace(numero, nameof(numero));
         Empresa = Guard.NotNullOrWhiteSpace(empresa, nameof(empresa));
@@ -95,6 +100,7 @@ public class OrdemServico : EntidadeBase
         Cidade = Guard.NotNullOrWhiteSpace(cidade, nameof(cidade));
         Responsavel = string.IsNullOrWhiteSpace(responsavel) ? null : responsavel.Trim();
         Fiscalizacao = fiscalizacao;
+        PapelAuditor = papelAuditor;
         RecebimentoSfit = recebimentoSfit;
         AberturaSfit = aberturaSfit;
         DataFiscalizacao = dataFiscalizacao;
@@ -120,6 +126,7 @@ public class OrdemServico : EntidadeBase
         string cidade,
         string? responsavel,
         TipoFiscalizacao fiscalizacao,
+        PapelAuditor papelAuditor,
         DateOnly recebimentoSfit,
         DateOnly aberturaSfit,
         DateOnly dataFiscalizacao,
@@ -143,6 +150,7 @@ public class OrdemServico : EntidadeBase
         RegistrarSeMudou(alteracoes, "Cidade", Cidade, cidade);
         RegistrarSeMudou(alteracoes, "Responsável", Responsavel, responsavelNormalizado);
         RegistrarSeMudou(alteracoes, "Fiscalização", Fiscalizacao.ToString(), fiscalizacao.ToString());
+        RegistrarSeMudou(alteracoes, "Auditor", PapelAuditor.ToString(), papelAuditor.ToString());
         RegistrarSeMudou(alteracoes, "Recebimento SFIT", RecebimentoSfit.ToString("dd/MM/yyyy"), recebimentoSfit.ToString("dd/MM/yyyy"));
         RegistrarSeMudou(alteracoes, "Abertura SFIT", AberturaSfit.ToString("dd/MM/yyyy"), aberturaSfit.ToString("dd/MM/yyyy"));
         RegistrarSeMudou(alteracoes, "Data da fiscalização", DataFiscalizacao.ToString("dd/MM/yyyy"), dataFiscalizacao.ToString("dd/MM/yyyy"));
@@ -164,6 +172,7 @@ public class OrdemServico : EntidadeBase
         Cidade = Guard.NotNullOrWhiteSpace(cidade, nameof(cidade));
         Responsavel = responsavelNormalizado;
         Fiscalizacao = fiscalizacao;
+        PapelAuditor = papelAuditor;
         RecebimentoSfit = recebimentoSfit;
         AberturaSfit = aberturaSfit;
         DataFiscalizacao = dataFiscalizacao;

@@ -43,6 +43,7 @@ public static class RelatorioBuilder
         linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Auditoria"));
         AdicionarCampo(linhas, "Situação", os.Situacao.Descricao());
         AdicionarCampo(linhas, "Fiscalização", os.Fiscalizacao.Descricao());
+        AdicionarCampo(linhas, "Auditor", os.PapelAuditor.Descricao());
 
         linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
         linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, "Fluxo SFIT"));
@@ -124,6 +125,7 @@ public static class RelatorioBuilder
             AdicionarCampo(linhas, "Responsável", os.Responsavel);
             AdicionarCampo(linhas, "Situação", os.Situacao.Descricao());
             AdicionarCampo(linhas, "Fiscalização", os.Fiscalizacao.Descricao());
+            AdicionarCampo(linhas, "Auditor", os.PapelAuditor.Descricao());
             AdicionarCampo(linhas, "1. Recebimento SFIT", os.RecebimentoSfit.ToString("dd/MM/yyyy"));
             AdicionarCampo(linhas, "2. Abertura SFIT", os.AberturaSfit.ToString("dd/MM/yyyy"));
             AdicionarCampo(linhas, "3. Fiscalização", os.DataFiscalizacao.ToString("dd/MM/yyyy"));

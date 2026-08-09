@@ -56,6 +56,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private bool _mostrarArquivos;
     [ObservableProperty] private string? _mensagemCep;
     [ObservableProperty] private TipoFiscalizacao _fiscalizacaoSelecionada = TipoFiscalizacao.Direta;
+    [ObservableProperty] private PapelAuditor _papelAuditorSelecionado = PapelAuditor.Principal;
 
     // As etapas do fluxo SFIT (CLAUDE V2), na ordem em que a auditoria progride. Ficam em
     // branco por padrão — o auditor deve digitar ou escolher cada data conscientemente,
@@ -86,6 +87,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     public ObservableCollection<TimelineEvento> Timeline { get; } = [];
     public IReadOnlyList<SituacaoOS> SituacoesDisponiveis { get; } = Enum.GetValues<SituacaoOS>();
     public IReadOnlyList<TipoFiscalizacao> TiposFiscalizacaoDisponiveis { get; } = Enum.GetValues<TipoFiscalizacao>();
+    public IReadOnlyList<PapelAuditor> PapeisAuditorDisponiveis { get; } = Enum.GetValues<PapelAuditor>();
 
     public OrdemServicoFormViewModel(
         OrdemServicoService ordemServicoService,
@@ -170,6 +172,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             Cidade = ordemServico.Cidade;
             Responsavel = ordemServico.Responsavel ?? string.Empty;
             FiscalizacaoSelecionada = ordemServico.Fiscalizacao;
+            PapelAuditorSelecionado = ordemServico.PapelAuditor;
             RecebimentoSfit = ordemServico.RecebimentoSfit.ToDateTime(TimeOnly.MinValue);
             AberturaSfit = ordemServico.AberturaSfit.ToDateTime(TimeOnly.MinValue);
             DataFiscalizacao = ordemServico.DataFiscalizacao.ToDateTime(TimeOnly.MinValue);
@@ -239,7 +242,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
                 ParaData(RecebimentoSfit), ParaData(AberturaSfit), ParaData(DataFiscalizacao), ParaData(PrazoNad),
                 ParaData(PrazoNco), ParaData(ElaboracaoAutos), ParaData(DataFinal),
                 Observacoes, latitude, longitude, TemNcre,
-                TemNcre ? ParaData(NcreInicio) : null, TemNcre ? ParaData(NcreFim) : null);
+                TemNcre ? ParaData(NcreInicio) : null, TemNcre ? ParaData(NcreFim) : null, PapelAuditorSelecionado);
 
             var resultado = await _ordemServicoService.CriarAsync(dto, arquivos);
             if (!resultado.IsSuccess)
@@ -262,7 +265,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
                 ParaData(RecebimentoSfit), ParaData(AberturaSfit), ParaData(DataFiscalizacao), ParaData(PrazoNad),
                 ParaData(PrazoNco), ParaData(ElaboracaoAutos), ParaData(DataFinal),
                 Observacoes, latitude, longitude, TemNcre,
-                TemNcre ? ParaData(NcreInicio) : null, TemNcre ? ParaData(NcreFim) : null);
+                TemNcre ? ParaData(NcreInicio) : null, TemNcre ? ParaData(NcreFim) : null, PapelAuditorSelecionado);
 
             var resultado = await _ordemServicoService.AtualizarAsync(dto, arquivos);
             if (!resultado.IsSuccess)
@@ -306,6 +309,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             Cidade = string.Empty;
             Responsavel = string.Empty;
             FiscalizacaoSelecionada = TipoFiscalizacao.Direta;
+            PapelAuditorSelecionado = PapelAuditor.Principal;
             RecebimentoSfit = null;
             AberturaSfit = null;
             DataFiscalizacao = null;

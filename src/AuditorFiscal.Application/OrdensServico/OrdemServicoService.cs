@@ -46,7 +46,8 @@ public class OrdemServicoService(
             dto.DataFinal,
             clock.UtcNow,
             dto.Observacoes,
-            CriarCoordenada(dto.Latitude, dto.Longitude));
+            CriarCoordenada(dto.Latitude, dto.Longitude),
+            dto.PapelAuditor);
 
         if (dto.TemNcre)
             ordemServico.DefinirNcre(true, dto.NcreInicio, dto.NcreFim, clock.UtcNow);
@@ -86,6 +87,7 @@ public class OrdemServicoService(
             dto.Cidade,
             dto.Responsavel,
             dto.Fiscalizacao,
+            dto.PapelAuditor,
             dto.RecebimentoSfit,
             dto.AberturaSfit,
             dto.DataFiscalizacao,

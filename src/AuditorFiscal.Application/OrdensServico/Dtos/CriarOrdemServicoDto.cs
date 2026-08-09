@@ -22,4 +22,5 @@ public sealed record CriarOrdemServicoDto(
     double? Longitude,
     bool TemNcre = false,
     DateOnly? NcreInicio = null,
-    DateOnly? NcreFim = null);
+    DateOnly? NcreFim = null,
+    PapelAuditor PapelAuditor = PapelAuditor.Principal);
