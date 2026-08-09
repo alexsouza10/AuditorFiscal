@@ -56,9 +56,9 @@ public partial class LinhaGanttViewModel : ObservableObject
     [ObservableProperty]
     private double _alturaBarra = 40.0;
 
-    /// <summary>Altura da faixa do NCRE — proporcional a AlturaBarra em vez de fixa, senão no
-    /// modo maximizado (linhas bem comprimidas) ela ficava enorme perto da barra principal
-    /// encolhida, parecendo um elemento quebrado em vez de só mais uma etapa do cronograma.</summary>
+    /// <summary>Altura da faixa do NCRE, calculada pelo GanttViewModel (ver RecalcularAlturasLinha)
+    /// a partir de AlturaLinha — com piso próprio, mais alto que o de AlturaBarra, para não
+    /// desaparecer de vista bem antes da barra principal ficar ilegível.</summary>
     [ObservableProperty]
     private double _alturaNcre = 10.0;
 
@@ -68,12 +68,12 @@ public partial class LinhaGanttViewModel : ObservableObject
     private bool _rotuloVisivel = true;
 
     /// <summary>Propaga a altura calculada pelo GanttViewModel para esta linha e seus segmentos.</summary>
-    public void AtualizarAltura(double alturaLinha, double alturaBarra, bool rotuloVisivel)
+    public void AtualizarAltura(double alturaLinha, double alturaBarra, double alturaNcre, bool rotuloVisivel)
     {
         AlturaLinha = alturaLinha;
         AlturaBarra = alturaBarra;
+        AlturaNcre = alturaNcre;
         RotuloVisivel = rotuloVisivel;
-        AlturaNcre = Math.Clamp(alturaBarra * 0.4, 3.0, 10.0);
 
         foreach (var segmento in Segmentos)
             segmento.AlturaBarra = alturaBarra;
