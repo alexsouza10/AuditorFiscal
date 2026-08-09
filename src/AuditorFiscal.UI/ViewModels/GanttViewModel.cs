@@ -99,6 +99,13 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         const double AlturaLinhaPadrao = 92.0;
         const double AlturaBarraPadrao = 40.0;
         const double AlturaBarraMinima = 2.0;
+        const double AlturaNcrePadrao = 10.0;
+
+        // Piso bem mais alto que o da barra principal: se os dois encolhessem na mesma
+        // proporção, a faixa do NCRE — já fina por natureza — sumia de vista bem antes da
+        // barra principal ficar ilegível. Derivar da linha inteira (não de AlturaBarra) evita
+        // esse acoplamento e mantém o NCRE visível numa faixa bem maior de compressão.
+        const double AlturaNcreMinima = 6.0;
         const double ReservaParaNcre = 16.0;
         const double LimiarRotuloVisivel = 40.0;
 
@@ -109,10 +116,11 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
             alturaLinha = Math.Min(AlturaLinhaPadrao, AlturaDisponivel / Linhas.Count);
 
         var alturaBarra = Math.Clamp(alturaLinha - ReservaParaNcre, AlturaBarraMinima, AlturaBarraPadrao);
+        var alturaNcre = Math.Clamp(alturaLinha * 0.15, AlturaNcreMinima, AlturaNcrePadrao);
         var rotuloVisivel = alturaLinha >= LimiarRotuloVisivel;
 
         foreach (var linha in Linhas)
-            linha.AtualizarAltura(alturaLinha, alturaBarra, rotuloVisivel);
+            linha.AtualizarAltura(alturaLinha, alturaBarra, alturaNcre, rotuloVisivel);
     }
 
     public GanttViewModel(
