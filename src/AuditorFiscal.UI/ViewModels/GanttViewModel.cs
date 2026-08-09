@@ -97,6 +97,22 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void LimparBusca() => FiltroTexto = null;
 
+    /// <summary>Reseta busca, situação e período personalizado para o padrão (12 meses
+    /// centralizados no mês atual) — mesmo comportamento do "Limpar filtros" do Banco de Dados.</summary>
+    [RelayCommand]
+    private async Task LimparFiltrosAsync()
+    {
+        FiltroTexto = null;
+        SituacaoFiltro.TodasSituacoes = true;
+        FiltroInicio = null;
+        FiltroFim = null;
+        _mesesVisiveis = PeriodoPadraoMeses;
+        PeriodoSelecionado = PeriodoPadraoMeses;
+
+        CentralizarJanelaNoMesAtual(_mesesVisiveis);
+        await CarregarAsync();
+    }
+
     [RelayCommand]
     private async Task PeriodoAnteriorAsync()
     {

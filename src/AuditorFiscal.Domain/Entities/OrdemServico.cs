@@ -36,11 +36,13 @@ public class OrdemServico : EntidadeBase
     public bool Favorito { get; private set; }
 
     /// <summary>
-    /// NCRE: prazo-limite adicional (fora do fluxo SFIT padrão) para cumprir a ordem.
+    /// NCRE: período adicional (fora do fluxo SFIT padrão) para cumprir a ordem, com início
+    /// e fim próprios — por isso vira uma barra no Gantt, não só um marcador pontual.
     /// Opcional — quando não cadastrado, o Gantt exibe um alerta lembrando o auditor.
     /// </summary>
     public bool TemNcre { get; private set; }
-    public DateOnly? PrazoNcre { get; private set; }
+    public DateOnly? NcreInicio { get; private set; }
+    public DateOnly? NcreFim { get; private set; }
 
     /// <summary>
     /// Projeção somente leitura das colunas Latitude/Longitude. As coordenadas ficam como
@@ -215,14 +217,15 @@ public class OrdemServico : EntidadeBase
         _timeline.Add(new TimelineEvento(Id, $"Cronograma adiado em {dias} dia(s).", momento));
     }
 
-    public void DefinirNcre(bool temNcre, DateOnly? prazoNcre, DateTimeOffset momento)
+    public void DefinirNcre(bool temNcre, DateOnly? ncreInicio, DateOnly? ncreFim, DateTimeOffset momento)
     {
         TemNcre = temNcre;
-        PrazoNcre = temNcre ? prazoNcre : null;
+        NcreInicio = temNcre ? ncreInicio : null;
+        NcreFim = temNcre ? ncreFim : null;
         MarcarAtualizado(momento);
 
         _timeline.Add(new TimelineEvento(Id, temNcre
-            ? $"NCRE cadastrado — prazo em {prazoNcre:dd/MM/yyyy}."
+            ? $"NCRE cadastrado — de {ncreInicio:dd/MM/yyyy} até {ncreFim:dd/MM/yyyy}."
             : "NCRE removido.", momento));
     }
 

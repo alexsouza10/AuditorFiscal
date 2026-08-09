@@ -74,7 +74,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private SituacaoOS _situacaoSelecionada = SituacaoOS.EmAndamento;
     [ObservableProperty] private bool _favorito;
     [ObservableProperty] private bool _temNcre;
-    [ObservableProperty] private DateTime? _prazoNcre;
+    [ObservableProperty] private DateTime? _ncreInicio;
+    [ObservableProperty] private DateTime? _ncreFim;
     [ObservableProperty] private string? _mensagemErro;
     [ObservableProperty] private string? _mensagemStatus;
     [ObservableProperty] private int _abaSelecionada;
@@ -183,7 +184,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             _situacaoCarregada = ordemServico.Situacao;
             Favorito = ordemServico.Favorito;
             TemNcre = ordemServico.TemNcre;
-            PrazoNcre = ordemServico.PrazoNcre?.ToDateTime(TimeOnly.MinValue);
+            NcreInicio = ordemServico.NcreInicio?.ToDateTime(TimeOnly.MinValue);
+            NcreFim = ordemServico.NcreFim?.ToDateTime(TimeOnly.MinValue);
 
             AtualizarListasArquivos(ordemServico);
 
@@ -236,7 +238,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
                 numero, Empresa, Cnpj, Endereco, Cidade, Responsavel, FiscalizacaoSelecionada,
                 ParaData(RecebimentoSfit), ParaData(AberturaSfit), ParaData(DataFiscalizacao), ParaData(PrazoNad),
                 ParaData(PrazoNco), ParaData(ElaboracaoAutos), ParaData(DataFinal),
-                Observacoes, latitude, longitude, TemNcre, TemNcre ? ParaData(PrazoNcre) : null);
+                Observacoes, latitude, longitude, TemNcre,
+                TemNcre ? ParaData(NcreInicio) : null, TemNcre ? ParaData(NcreFim) : null);
 
             var resultado = await _ordemServicoService.CriarAsync(dto, arquivos);
             if (!resultado.IsSuccess)
@@ -258,7 +261,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
                 _ordemServicoId, numero, Empresa, Cnpj, Endereco, Cidade, Responsavel, FiscalizacaoSelecionada,
                 ParaData(RecebimentoSfit), ParaData(AberturaSfit), ParaData(DataFiscalizacao), ParaData(PrazoNad),
                 ParaData(PrazoNco), ParaData(ElaboracaoAutos), ParaData(DataFinal),
-                Observacoes, latitude, longitude, TemNcre, TemNcre ? ParaData(PrazoNcre) : null);
+                Observacoes, latitude, longitude, TemNcre,
+                TemNcre ? ParaData(NcreInicio) : null, TemNcre ? ParaData(NcreFim) : null);
 
             var resultado = await _ordemServicoService.AtualizarAsync(dto, arquivos);
             if (!resultado.IsSuccess)
@@ -315,7 +319,8 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             SituacaoSelecionada = SituacaoOS.EmAndamento;
             Favorito = false;
             TemNcre = false;
-            PrazoNcre = null;
+            NcreInicio = null;
+            NcreFim = null;
             MostrarArquivos = false;
 
             _arquivosPendentes.Clear();
@@ -514,7 +519,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
             PrazoNad is null || PrazoNco is null || ElaboracaoAutos is null || DataFinal is null)
             return false;
 
-        return !TemNcre || PrazoNcre is not null;
+        return !TemNcre || (NcreInicio is not null && NcreFim is not null);
     }
 
     private static DateOnly ParaData(DateTime? valor) =>

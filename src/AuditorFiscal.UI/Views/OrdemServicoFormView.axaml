@@ -226,10 +226,16 @@
                                 </StackPanel>
                             </Grid>
 
-                            <StackPanel IsVisible="{Binding TemNcre}" Margin="0,4,0,0">
-                                <TextBlock Text="Prazo do NCRE" Classes="fieldLabel" />
-                                <CalendarDatePicker SelectedDate="{Binding PrazoNcre}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
-                            </StackPanel>
+                            <Grid ColumnDefinitions="*,10,*" IsVisible="{Binding TemNcre}" Margin="0,4,0,0">
+                                <StackPanel Grid.Column="0" MinWidth="120">
+                                    <TextBlock Text="Início do NCRE" Classes="fieldLabel" />
+                                    <CalendarDatePicker SelectedDate="{Binding NcreInicio}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" MinWidth="120">
+                                    <TextBlock Text="Fim do NCRE" Classes="fieldLabel" />
+                                    <CalendarDatePicker SelectedDate="{Binding NcreFim}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Border>
 

@@ -23,8 +23,8 @@ public partial class LinhaGanttViewModel : ObservableObject
 
     public bool TemNcre => OrdemServico.TemNcre;
 
-    public string NcreTexto => OrdemServico.TemNcre && OrdemServico.PrazoNcre.HasValue
-        ? $"NCRE: {OrdemServico.PrazoNcre.Value:dd/MM/yyyy}"
+    public string NcreTexto => OrdemServico.TemNcre && OrdemServico.NcreInicio.HasValue && OrdemServico.NcreFim.HasValue
+        ? $"NCRE: {OrdemServico.NcreInicio.Value:dd/MM/yyyy} a {OrdemServico.NcreFim.Value:dd/MM/yyyy}"
         : "NCRE: não informado";
 
     /// <summary>Margem esquerda da barra, em proporção da largura total da janela visível.</summary>
@@ -33,8 +33,12 @@ public partial class LinhaGanttViewModel : ObservableObject
     /// <summary>Largura total da barra, em proporção da largura total da janela visível.</summary>
     public double LarguraTotal { get; }
 
-    /// <summary>Posição da barrinha azul do NCRE (marcador), na mesma escala de MargemEsquerda.</summary>
+    /// <summary>Margem esquerda da barra do NCRE, na mesma escala de MargemEsquerda — acompanha a
+    /// barra principal, um pouco abaixo dela, do início ao fim do período do NCRE.</summary>
     public double MargemNcre { get; }
+
+    /// <summary>Largura da barra do NCRE, na mesma escala de LarguraTotal.</summary>
+    public double LarguraNcre { get; }
 
     public IReadOnlyList<SegmentoGanttViewModel> Segmentos { get; }
 
@@ -53,10 +57,12 @@ public partial class LinhaGanttViewModel : ObservableObject
         MargemEsquerda = (inicioBarra.DayNumber - inicioJanela.DayNumber) / (double)totalDiasJanela;
         LarguraTotal = Math.Max(0.004, (fimBarra.DayNumber - inicioBarra.DayNumber) / (double)totalDiasJanela);
 
-        if (ordemServico.TemNcre && ordemServico.PrazoNcre.HasValue)
+        if (ordemServico.TemNcre && ordemServico.NcreInicio.HasValue && ordemServico.NcreFim.HasValue)
         {
-            var dataNcre = Menor(Maior(ordemServico.PrazoNcre.Value, inicioJanela), fimJanela);
-            MargemNcre = (dataNcre.DayNumber - inicioJanela.DayNumber) / (double)totalDiasJanela;
+            var inicioNcre = Maior(ordemServico.NcreInicio.Value, inicioJanela);
+            var fimNcre = Menor(ordemServico.NcreFim.Value, fimJanela);
+            MargemNcre = (inicioNcre.DayNumber - inicioJanela.DayNumber) / (double)totalDiasJanela;
+            LarguraNcre = Math.Max(0.004, (fimNcre.DayNumber - inicioNcre.DayNumber) / (double)totalDiasJanela);
         }
 
         // Cada segmento é recortado para a mesma janela visível da barra e medido como
