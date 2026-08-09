@@ -44,6 +44,7 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private DateTime? _filtroInicio;
     [ObservableProperty] private DateTime? _filtroFim;
     [ObservableProperty] private int _periodoSelecionado = PeriodoPadraoMeses;
+    [ObservableProperty] private bool _maximizado;
 
     public ObservableCollection<MesGanttViewModel> Meses { get; } = [];
     public ObservableCollection<LinhaGanttViewModel> Linhas { get; } = [];
@@ -54,6 +55,20 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     public SituacaoMultiSelectViewModel SituacaoFiltro { get; } = new();
 
     public bool TemSelecao => Selecionada is not null;
+
+    /// <summary>O painel de detalhes só aparece com uma O.S. selecionada E fora do modo
+    /// maximizado — maximizar existe justamente para devolver aquela largura ao gráfico.</summary>
+    public bool MostrarPainelDetalhe => TemSelecao && !Maximizado;
+
+    public string IconeMaximizar => Maximizado ? "🗗" : "⛶";
+    public string TituloMaximizar => Maximizado ? "Restaurar cronograma" : "Maximizar cronograma (esconde filtros e detalhes)";
+
+    partial void OnMaximizadoChanged(bool value)
+    {
+        OnPropertyChanged(nameof(MostrarPainelDetalhe));
+        OnPropertyChanged(nameof(IconeMaximizar));
+        OnPropertyChanged(nameof(TituloMaximizar));
+    }
 
     public GanttViewModel(
         OrdemServicoService ordemServicoService,
@@ -178,6 +193,9 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private void AlternarMaximizado() => Maximizado = !Maximizado;
+
+    [RelayCommand]
     private void SelecionarLinha(LinhaGanttViewModel linha)
     {
         if (Selecionada is not null)
@@ -188,6 +206,7 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
         SituacaoEdicao = linha.OrdemServico.Situacao;
 
         OnPropertyChanged(nameof(TemSelecao));
+        OnPropertyChanged(nameof(MostrarPainelDetalhe));
     }
 
     [RelayCommand]
@@ -293,6 +312,7 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
 
         Selecionada = null;
         OnPropertyChanged(nameof(TemSelecao));
+        OnPropertyChanged(nameof(MostrarPainelDetalhe));
     }
 
     [RelayCommand]
@@ -352,6 +372,7 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
 
         Selecionada = null;
         OnPropertyChanged(nameof(TemSelecao));
+        OnPropertyChanged(nameof(MostrarPainelDetalhe));
 
         if (selecionar is not null)
             SelecionarLinha(selecionar);

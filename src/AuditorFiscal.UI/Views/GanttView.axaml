@@ -52,8 +52,13 @@
                 <Button Content="Hoje" Command="{Binding HojeCommand}" Margin="8,0,0,0" />
             </StackPanel>
 
-            <Button Grid.Column="2" Content="+ Nova OS" Classes="accent"
-                    Command="{Binding NovaOrdemCommand}" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button Content="{Binding IconeMaximizar}" Command="{Binding AlternarMaximizadoCommand}"
+                        ToolTip.Tip="{Binding TituloMaximizar}"
+                        AutomationProperties.AutomationId="BtnMaximizarGantt" />
+                <Button Content="+ Nova OS" Classes="accent"
+                        Command="{Binding NovaOrdemCommand}" VerticalAlignment="Center" />
+            </StackPanel>
         </Grid>
 
         <!-- Filtros: busca por OS/CNPJ/empresa, período rápido e intervalo personalizado.
@@ -61,7 +66,8 @@
              quando a janela fica estreita, então os grupos de filtro nunca quebram linha —
              cabem até na largura mínima da janela (900px, ver MainWindow.MinWidth). -->
         <Border Grid.Row="1" Padding="10" CornerRadius="8" Margin="0,0,0,14"
-                Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
+                Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1"
+                IsVisible="{Binding !Maximizado}">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" VerticalAlignment="Center">
                 <TextBox Grid.Column="0" Text="{Binding FiltroTexto}" PlaceholderText="Buscar por O.S., CNPJ ou empresa…"
                          MinWidth="110" Margin="0,0,10,0" AutomationProperties.AutomationId="TxtBuscaGantt">
@@ -207,6 +213,13 @@
                                                                     <TextBlock Text="{Binding Numero}" FontSize="10" Foreground="White" Opacity="0.85" />
                                                                 </StackPanel>
                                                             </Border>
+
+                                                            <!-- Marcador da Data final: prazo separado da elaboração dos
+                                                                 autos (marrom, ocupa toda a duração do último segmento) —
+                                                                 é um instante, não uma etapa, por isso é só uma faixa fina
+                                                                 vermelha na ponta direita da barra, não outro segmento. -->
+                                                            <Rectangle Fill="#EF4444" Width="5" Height="40" HorizontalAlignment="Right"
+                                                                       ToolTip.Tip="{Binding OrdemServico.DataFinal, StringFormat='Data final: {0:dd/MM/yyyy}'}" />
                                                         </Grid>
                                                     </Border>
                                                 </Button>
@@ -258,7 +271,7 @@
             <Border Grid.Column="1" Width="310" Margin="16,0,0,0" Padding="18" CornerRadius="8"
                     Background="{DynamicResource CartaoBrush}"
                     BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1"
-                    IsVisible="{Binding TemSelecao}">
+                    IsVisible="{Binding MostrarPainelDetalhe}">
                 <DockPanel>
                     <Button DockPanel.Dock="Top" Content="✕" HorizontalAlignment="Right" Padding="8,4"
                             Command="{Binding FecharDetalheCommand}" ToolTip.Tip="Fechar detalhes" />
@@ -322,7 +335,8 @@
 
         <!-- Legenda -->
         <Border Grid.Row="3" Margin="0,14,0,0" Padding="12" CornerRadius="8"
-                Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
+                Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1"
+                IsVisible="{Binding !Maximizado}">
             <WrapPanel>
                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,20,0">
                     <Rectangle Width="14" Height="14" RadiusX="3" RadiusY="3" Fill="#D4D4D8"
@@ -345,9 +359,13 @@
                     <Rectangle Width="14" Height="14" RadiusX="3" RadiusY="3" Fill="#F97316" />
                     <TextBlock Text="5. Prazo NCO" FontSize="12" VerticalAlignment="Center" />
                 </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,20,0">
+                    <Rectangle Width="14" Height="14" RadiusX="3" RadiusY="3" Fill="#92400E" />
+                    <TextBlock Text="6. Elaboração dos autos" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <Rectangle Width="14" Height="14" RadiusX="3" RadiusY="3" Fill="#EF4444" />
-                    <TextBlock Text="6. Autos / Final" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Text="7. Data final" FontSize="12" VerticalAlignment="Center" />
                 </StackPanel>
             </WrapPanel>
         </Border>

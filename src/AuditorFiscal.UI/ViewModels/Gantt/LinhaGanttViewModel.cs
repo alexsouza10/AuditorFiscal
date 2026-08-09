@@ -67,7 +67,9 @@ public partial class LinhaGanttViewModel : ObservableObject
 
         // Cada segmento é recortado para a mesma janela visível da barra e medido como
         // proporção da janela inteira — a mesma escala usada por MargemEsquerda/LarguraTotal.
-        // Esquema de cores 1-6 do cronograma: 1 cinza, 2 azul, 3 verde, 4 amarelo, 5 laranja, 6 vermelho.
+        // Esquema de cores 1-6 do cronograma: 1 cinza, 2 azul, 3 verde, 4 amarelo, 5 laranja, 6 marrom.
+        // Data final é um prazo à parte (não uma etapa com duração): vira o marcador vermelho
+        // fino na ponta direita da barra, desenhado na view — por isso não tem cor aqui.
         Segmentos =
         [
             CriarSegmento("#D4D4D8", "Recebimento SFIT", ordemServico.RecebimentoSfit, ordemServico.AberturaSfit, inicioJanela, fimJanela, totalDiasJanela),
@@ -75,7 +77,7 @@ public partial class LinhaGanttViewModel : ObservableObject
             CriarSegmento("#22C55E", "Fiscalização", ordemServico.DataFiscalizacao, ordemServico.PrazoNad, inicioJanela, fimJanela, totalDiasJanela),
             CriarSegmento("#EAB308", "Prazo NAD", ordemServico.PrazoNad, ordemServico.PrazoNco, inicioJanela, fimJanela, totalDiasJanela),
             CriarSegmento("#F97316", "Prazo NCO", ordemServico.PrazoNco, ordemServico.ElaboracaoAutos, inicioJanela, fimJanela, totalDiasJanela),
-            CriarSegmento("#EF4444", "Autos / Final", ordemServico.ElaboracaoAutos, ordemServico.DataFinal, inicioJanela, fimJanela, totalDiasJanela)
+            CriarSegmento("#92400E", "Elaboração dos autos", ordemServico.ElaboracaoAutos, ordemServico.DataFinal, inicioJanela, fimJanela, totalDiasJanela)
         ];
     }
 
