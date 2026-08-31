@@ -26,6 +26,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     private readonly DispatcherTimer _autoSaveTimer;
 
     private readonly List<NovoArquivoDto> _arquivosPendentes = [];
+    private readonly HashSet<string> _camposComDataInvalida = [];
     private Guid _ordemServicoId;
     private bool _carregando;
     private bool _sujo;
@@ -121,6 +122,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
 
     public string TituloPagina => IsNovo ? "Nova Ordem de Serviço" : $"Ordem de Serviço {Numero}";
     public bool PodeExportar => !IsNovo;
+    public bool PodeDuplicar => !IsNovo;
     public string FavoritoTexto => Favorito ? "★ Favorito" : "☆ Favorito";
     public double ZoomViewboxLargura => ZoomViewboxLarguraBase * ZoomNivel;
     public double ZoomViewboxAltura => ZoomViewboxAlturaBase * ZoomNivel;
@@ -151,6 +153,19 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     {
         RecebimentoSfit = data.ToDateTime(hora);
     }
+
+    /// <summary>Chamado pela View (CalendarDateValidationGuard) quando o CalendarDatePicker de
+    /// um campo não consegue interpretar o que o auditor digitou — data que não existe (ex.:
+    /// 31/02) ou texto fora do formato dd/mm/aaaa.</summary>
+    public void InformarDataInvalida(string campo)
+    {
+        _camposComDataInvalida.Add(campo);
+        MensagemErro = $"A data do campo \"{campo}\" está incorreta ou não existe.";
+    }
+
+    /// <summary>Chamado pela View quando o campo volta a ter uma data válida, para o aviso de
+    /// "data inválida" não continuar sendo priorizado no Salvar depois de corrigido.</summary>
+    public void LimparDataInvalida(string campo) => _camposComDataInvalida.Remove(campo);
 
     public async Task CarregarParaEdicaoAsync(Guid ordemServicoId)
     {
@@ -200,6 +215,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         {
             _carregando = false;
             _sujo = false;
+            _camposComDataInvalida.Clear();
             NotificarCabecalho();
         }
     }
@@ -220,7 +236,13 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
 
         if (!DatasObrigatoriasPreenchidas())
         {
-            MensagemErro = "Preencha todas as datas do fluxo SFIT antes de salvar.";
+            // Uma data que o auditor digitou errado (ex.: 31/11) e uma data deixada em branco
+            // resultam no mesmo valor nulo aqui — sem essa checagem, o aviso genérico sempre
+            // vencia e escondia o aviso específico que CalendarDateValidationGuard acabara de
+            // definir ao perder o foco do campo inválido.
+            MensagemErro = _camposComDataInvalida.Count > 0
+                ? $"A data do campo \"{_camposComDataInvalida.First()}\" está incorreta ou não existe."
+                : "Preencha todas as datas do fluxo SFIT antes de salvar.";
             return false;
         }
 
@@ -340,6 +362,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         {
             _carregando = false;
             _sujo = false;
+            _camposComDataInvalida.Clear();
             NotificarCabecalho();
         }
     }
@@ -428,6 +451,49 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         _navigation.Voltar();
     }
 
+    /// <summary>Vira o formulário para "nova O.S." mantendo os dados atuais preenchidos, para o
+    /// auditor duplicar uma O.S. existente alterando só o que muda (empresa, número, etc.) em vez
+    /// de editar a OS carregada por engano e sobrescrevê-la — foi exatamente esse engano que fez o
+    /// auditor perder uma OS ao tentar cadastrar uma segunda com as mesmas datas.</summary>
+    [RelayCommand]
+    private async Task DuplicarAsync()
+    {
+        if (IsNovo)
+            return;
+
+        if (!await _dialogs.ConfirmarAsync("Copiar para nova O.S.",
+                "Cria uma nova O.S. com os mesmos dados desta. Ajuste o que for necessário e salve para gravar como um novo registro.",
+                "Copiar"))
+            return;
+
+        _carregando = true;
+        try
+        {
+            _ordemServicoId = Guid.Empty;
+            IsNovo = true;
+            Numero = string.Empty;
+            _numeroCarregado = string.Empty;
+            _numeroSugerido = await _ordemServicoService.SugerirProximoNumeroAsync();
+            NumeroPlaceholder = $"Em branco = usa {_numeroSugerido}";
+            SituacaoSelecionada = SituacaoOS.EmAndamento;
+            Favorito = false;
+
+            _arquivosPendentes.Clear();
+            Fotos.Clear();
+            Anexos.Clear();
+            Timeline.Clear();
+
+            MensagemStatus = "Dados duplicados. Ajuste o que for necessário e salve para criar a nova O.S.";
+        }
+        finally
+        {
+            _carregando = false;
+            _sujo = false;
+            _camposComDataInvalida.Clear();
+            NotificarCabecalho();
+        }
+    }
+
     [RelayCommand]
     private async Task ExportarPdfAsync()
     {
@@ -497,6 +563,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         {
             _carregando = false;
             _sujo = false;
+            _camposComDataInvalida.Clear();
             NotificarCabecalho();
         }
     }
@@ -555,6 +622,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     {
         OnPropertyChanged(nameof(TituloPagina));
         OnPropertyChanged(nameof(PodeExportar));
+        OnPropertyChanged(nameof(PodeDuplicar));
     }
 
     protected override void OnPropertyChanged(global::System.ComponentModel.PropertyChangedEventArgs e)

@@ -34,7 +34,7 @@ public static class RelatorioBuilder
         };
 
         AdicionarCampo(linhas, "Empresa", os.Empresa);
-        AdicionarCampo(linhas, "CNPJ", os.Cnpj.Formatado());
+        AdicionarCampo(linhas, "CNPJ/CPF", os.Cnpj.Formatado());
         AdicionarCampo(linhas, "Endereço", os.Endereco);
         AdicionarCampo(linhas, "Cidade", os.Cidade);
         AdicionarCampo(linhas, "Responsável", os.Responsavel);
@@ -119,7 +119,7 @@ public static class RelatorioBuilder
             linhas.Add(new LinhaRelatorio(EstiloLinha.Separador, string.Empty));
             linhas.Add(new LinhaRelatorio(EstiloLinha.Subtitulo, $"OS {os.Numero} — {os.Empresa}"));
 
-            AdicionarCampo(linhas, "CNPJ", os.Cnpj.Formatado());
+            AdicionarCampo(linhas, "CNPJ/CPF", os.Cnpj.Formatado());
             AdicionarCampo(linhas, "Endereço", os.Endereco);
             AdicionarCampo(linhas, "Cidade", os.Cidade);
             AdicionarCampo(linhas, "Responsável", os.Responsavel);
