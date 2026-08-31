@@ -43,4 +43,32 @@ public class CnpjTests
     {
         Cnpj.EhValido("11.444.777/0001-61").Should().BeTrue();
     }
+
+    [Theory]
+    [InlineData("111.444.777-35")]
+    [InlineData("11144477735")]
+    public void Criar_ComCpfValido_DeveRetornarInstancia(string valor)
+    {
+        var cpf = Cnpj.Criar(valor);
+
+        cpf.Numero.Should().Be("11144477735");
+        cpf.Formatado().Should().Be("111.444.777-35");
+        cpf.EhCpf.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("111.444.777-34")]
+    [InlineData("00000000000")]
+    public void Criar_ComCpfInvalido_DeveLancarExcecao(string valor)
+    {
+        var acao = () => Cnpj.Criar(valor);
+
+        acao.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void EhValido_ComCpfValido_DeveRetornarTrue()
+    {
+        Cnpj.EhValido("111.444.777-35").Should().BeTrue();
+    }
 }

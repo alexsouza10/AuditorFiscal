@@ -121,6 +121,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
 
     public string TituloPagina => IsNovo ? "Nova Ordem de Serviço" : $"Ordem de Serviço {Numero}";
     public bool PodeExportar => !IsNovo;
+    public bool PodeDuplicar => !IsNovo;
     public string FavoritoTexto => Favorito ? "★ Favorito" : "☆ Favorito";
     public double ZoomViewboxLargura => ZoomViewboxLarguraBase * ZoomNivel;
     public double ZoomViewboxAltura => ZoomViewboxAlturaBase * ZoomNivel;
@@ -428,6 +429,48 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         _navigation.Voltar();
     }
 
+    /// <summary>Vira o formulário para "nova O.S." mantendo os dados atuais preenchidos, para o
+    /// auditor duplicar uma O.S. existente alterando só o que muda (empresa, número, etc.) em vez
+    /// de editar a OS carregada por engano e sobrescrevê-la — foi exatamente esse engano que fez o
+    /// auditor perder uma OS ao tentar cadastrar uma segunda com as mesmas datas.</summary>
+    [RelayCommand]
+    private async Task DuplicarAsync()
+    {
+        if (IsNovo)
+            return;
+
+        if (!await _dialogs.ConfirmarAsync("Copiar para nova O.S.",
+                "Cria uma nova O.S. com os mesmos dados desta. Ajuste o que for necessário e salve para gravar como um novo registro.",
+                "Copiar"))
+            return;
+
+        _carregando = true;
+        try
+        {
+            _ordemServicoId = Guid.Empty;
+            IsNovo = true;
+            Numero = string.Empty;
+            _numeroCarregado = string.Empty;
+            _numeroSugerido = await _ordemServicoService.SugerirProximoNumeroAsync();
+            NumeroPlaceholder = $"Em branco = usa {_numeroSugerido}";
+            SituacaoSelecionada = SituacaoOS.EmAndamento;
+            Favorito = false;
+
+            _arquivosPendentes.Clear();
+            Fotos.Clear();
+            Anexos.Clear();
+            Timeline.Clear();
+
+            MensagemStatus = "Dados duplicados. Ajuste o que for necessário e salve para criar a nova O.S.";
+        }
+        finally
+        {
+            _carregando = false;
+            _sujo = false;
+            NotificarCabecalho();
+        }
+    }
+
     [RelayCommand]
     private async Task ExportarPdfAsync()
     {
@@ -555,6 +598,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     {
         OnPropertyChanged(nameof(TituloPagina));
         OnPropertyChanged(nameof(PodeExportar));
+        OnPropertyChanged(nameof(PodeDuplicar));
     }
 
     protected override void OnPropertyChanged(global::System.ComponentModel.PropertyChangedEventArgs e)

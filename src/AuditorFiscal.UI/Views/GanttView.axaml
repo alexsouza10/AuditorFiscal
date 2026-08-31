@@ -70,7 +70,7 @@
         <Border Grid.Row="1" Padding="10" CornerRadius="8" Margin="0,0,0,14"
                 Background="{DynamicResource CartaoBrush}" BorderBrush="{DynamicResource BordaBrush}" BorderThickness="1">
             <WrapPanel Orientation="Horizontal">
-                <TextBox Text="{Binding FiltroTexto}" PlaceholderText="Buscar por O.S., CNPJ ou empresa…"
+                <TextBox Text="{Binding FiltroTexto}" PlaceholderText="Buscar por O.S., CNPJ/CPF ou empresa…"
                          Width="220" Margin="0,0,10,10" AutomationProperties.AutomationId="TxtBuscaGantt">
                     <TextBox.InnerRightContent>
                         <Button Content="✕" FontSize="10" Padding="6,2" Background="Transparent" BorderThickness="0"

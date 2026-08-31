@@ -145,7 +145,12 @@ public partial class GanttViewModel : ViewModelBase, IDisposable
             await CarregarAsync();
         };
 
-        WeakReferenceMessenger.Default.Register<OrdemServicoAlteradaMessage>(this, async (_, _) => await CarregarAsync());
+        // Preserva a seleção atual: sem isso, salvar/criar/excluir qualquer O.S. em QUALQUER
+        // tela do app (ex.: duplicar e salvar uma O.S. no formulário) recarregava este
+        // cronograma em segundo plano e zerava a seleção — e por ser assíncrono, podia
+        // terminar depois de o auditor clicar numa barra aqui, fechando o painel de detalhes
+        // que ele acabara de abrir.
+        WeakReferenceMessenger.Default.Register<OrdemServicoAlteradaMessage>(this, async (_, _) => await CarregarAsync(Selecionada?.Id));
 
         SituacaoFiltro.SelecaoAlterada += (_, _) =>
         {

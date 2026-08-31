@@ -175,7 +175,7 @@
                                 <TextBlock Text="{Binding Selecionada.Numero}" Opacity="0.7" FontSize="12" />
 
                                 <StackPanel Spacing="2">
-                                    <TextBlock Text="CNPJ" FontSize="11" Opacity="0.6" />
+                                    <TextBlock Text="CNPJ/CPF" FontSize="11" Opacity="0.6" />
                                     <TextBlock Text="{Binding Selecionada.Cnpj}" />
                                 </StackPanel>
                                 <StackPanel Spacing="2">

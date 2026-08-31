@@ -14,7 +14,7 @@ public class ExcelExportService : IExcelExportService
 
         string[] cabecalhos =
         [
-            "Número", "Descrição / Cliente", "CNPJ", "Endereço", "Cidade", "Responsável",
+            "Número", "Descrição / Cliente", "CNPJ/CPF", "Endereço", "Cidade", "Responsável",
             "Fiscalização", "Auditor", "Recebimento SFIT", "Abertura SFIT", "Data Fiscalização", "Prazo NAD", "Prazo NCO",
             "Elaboração Autos", "Data Final", "Situação", "Favorito",
             "Fotos", "Anexos", "Latitude", "Longitude", "Observações"

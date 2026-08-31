@@ -75,6 +75,9 @@
                 <Button Content="Salvar e Criar Nova OS" Command="{Binding SalvarECriarNovaCommand}" MinWidth="180"
                         ToolTip.Tip="Salva esta OS e limpa o formulário para cadastrar a próxima"
                         AutomationProperties.AutomationId="BtnSalvarECriarNova" />
+                <Button Content="Copiar para Nova OS" Command="{Binding DuplicarCommand}" IsVisible="{Binding PodeDuplicar}"
+                        ToolTip.Tip="Cria uma nova O.S. com os mesmos dados desta"
+                        AutomationProperties.AutomationId="BtnDuplicar" />
                 <TextBlock Text="{Binding MensagemStatus}" Foreground="#22C55E" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding MensagemErro}" Foreground="#EF4444" VerticalAlignment="Center" TextWrapping="Wrap" />
             </StackPanel>
@@ -115,8 +118,8 @@
                             </ComboBox>
                         </StackPanel>
                         <StackPanel Grid.Column="4">
-                            <TextBlock Text="CNPJ" Classes="fieldLabel" />
-                            <TextBox Text="{Binding Cnpj}" PlaceholderText="00.000.000/0000-00" />
+                            <TextBlock Text="CNPJ/CPF" Classes="fieldLabel" />
+                            <TextBox Text="{Binding Cnpj}" PlaceholderText="CNPJ ou CPF" />
                         </StackPanel>
                     </Grid>
 

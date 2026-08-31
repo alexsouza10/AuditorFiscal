@@ -145,7 +145,7 @@ public class OrdemServico : EntidadeBase
         var alteracoes = new List<string>();
         RegistrarSeMudou(alteracoes, "O.S. N°", Numero, numero);
         RegistrarSeMudou(alteracoes, "Empresa", Empresa, empresa);
-        RegistrarSeMudou(alteracoes, "CNPJ", Cnpj.Formatado(), cnpj.Formatado());
+        RegistrarSeMudou(alteracoes, "CNPJ/CPF", Cnpj.Formatado(), cnpj.Formatado());
         RegistrarSeMudou(alteracoes, "Endereço", Endereco, endereco);
         RegistrarSeMudou(alteracoes, "Cidade", Cidade, cidade);
         RegistrarSeMudou(alteracoes, "Responsável", Responsavel, responsavelNormalizado);
