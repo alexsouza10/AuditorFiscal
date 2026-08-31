@@ -201,40 +201,40 @@
                             <Grid ColumnDefinitions="*,10,*">
                                 <StackPanel Grid.Column="0" MinWidth="120">
                                     <TextBlock Text="1. Recebimento SFIT" Classes="fieldLabel" ToolTip.Tip="Recebimento da OS no SFIT" />
-                                    <CalendarDatePicker SelectedDate="{Binding RecebimentoSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding RecebimentoSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Recebimento SFIT" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" MinWidth="120">
                                     <TextBlock Text="2. Abertura SFIT" Classes="fieldLabel" ToolTip.Tip="Abertura no SFIT" />
-                                    <CalendarDatePicker SelectedDate="{Binding AberturaSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding AberturaSfit}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Abertura SFIT" />
                                 </StackPanel>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,10,*" Margin="0,2,0,0">
                                 <StackPanel Grid.Column="0" MinWidth="120">
                                     <TextBlock Text="3. Fiscalização" Classes="fieldLabel" ToolTip.Tip="Data da fiscalização" />
-                                    <CalendarDatePicker SelectedDate="{Binding DataFiscalizacao}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding DataFiscalizacao}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Fiscalização" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" MinWidth="120">
                                     <TextBlock Text="4. Prazo NAD" Classes="fieldLabel" ToolTip.Tip="Prazo recebimento de documentos [NAD]" />
-                                    <CalendarDatePicker SelectedDate="{Binding PrazoNad}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding PrazoNad}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Prazo NAD" />
                                 </StackPanel>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,10,*" Margin="0,2,0,0">
                                 <StackPanel Grid.Column="0" MinWidth="120">
                                     <TextBlock Text="5. Prazo NCO" Classes="fieldLabel" ToolTip.Tip="Prazo cumprimento de obrigações [NCO]" />
-                                    <CalendarDatePicker SelectedDate="{Binding PrazoNco}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding PrazoNco}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Prazo NCO" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" MinWidth="120">
                                     <TextBlock Text="6. Elaboração dos autos" Classes="fieldLabel" />
-                                    <CalendarDatePicker SelectedDate="{Binding ElaboracaoAutos}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding ElaboracaoAutos}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Elaboração dos autos" />
                                 </StackPanel>
                             </Grid>
 
                             <Grid ColumnDefinitions="*,10,*" Margin="0,2,0,0">
                                 <StackPanel Grid.Column="0" MinWidth="120">
                                     <TextBlock Text="7. Data final" Classes="fieldLabel" />
-                                    <CalendarDatePicker SelectedDate="{Binding DataFinal}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding DataFinal}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Data final" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" MinWidth="120">
                                     <TextBlock Text=" " Classes="fieldLabel" />
@@ -246,11 +246,11 @@
                             <Grid ColumnDefinitions="*,10,*" IsVisible="{Binding TemNcre}" Margin="0,4,0,0">
                                 <StackPanel Grid.Column="0" MinWidth="120">
                                     <TextBlock Text="Início do NCRE" Classes="fieldLabel" />
-                                    <CalendarDatePicker SelectedDate="{Binding NcreInicio}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding NcreInicio}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Início do NCRE" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" MinWidth="120">
                                     <TextBlock Text="Fim do NCRE" Classes="fieldLabel" />
-                                    <CalendarDatePicker SelectedDate="{Binding NcreFim}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" />
+                                    <CalendarDatePicker SelectedDate="{Binding NcreFim}" HorizontalAlignment="Stretch" PlaceholderText="dd/mm/aaaa" Tag="Fim do NCRE" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>

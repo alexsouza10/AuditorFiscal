@@ -26,6 +26,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
     private readonly DispatcherTimer _autoSaveTimer;
 
     private readonly List<NovoArquivoDto> _arquivosPendentes = [];
+    private readonly HashSet<string> _camposComDataInvalida = [];
     private Guid _ordemServicoId;
     private bool _carregando;
     private bool _sujo;
@@ -153,6 +154,19 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         RecebimentoSfit = data.ToDateTime(hora);
     }
 
+    /// <summary>Chamado pela View (CalendarDateValidationGuard) quando o CalendarDatePicker de
+    /// um campo não consegue interpretar o que o auditor digitou — data que não existe (ex.:
+    /// 31/02) ou texto fora do formato dd/mm/aaaa.</summary>
+    public void InformarDataInvalida(string campo)
+    {
+        _camposComDataInvalida.Add(campo);
+        MensagemErro = $"A data do campo \"{campo}\" está incorreta ou não existe.";
+    }
+
+    /// <summary>Chamado pela View quando o campo volta a ter uma data válida, para o aviso de
+    /// "data inválida" não continuar sendo priorizado no Salvar depois de corrigido.</summary>
+    public void LimparDataInvalida(string campo) => _camposComDataInvalida.Remove(campo);
+
     public async Task CarregarParaEdicaoAsync(Guid ordemServicoId)
     {
         var ordemServico = await _ordemServicoService.ObterDetalheAsync(ordemServicoId);
@@ -201,6 +215,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         {
             _carregando = false;
             _sujo = false;
+            _camposComDataInvalida.Clear();
             NotificarCabecalho();
         }
     }
@@ -221,7 +236,13 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
 
         if (!DatasObrigatoriasPreenchidas())
         {
-            MensagemErro = "Preencha todas as datas do fluxo SFIT antes de salvar.";
+            // Uma data que o auditor digitou errado (ex.: 31/11) e uma data deixada em branco
+            // resultam no mesmo valor nulo aqui — sem essa checagem, o aviso genérico sempre
+            // vencia e escondia o aviso específico que CalendarDateValidationGuard acabara de
+            // definir ao perder o foco do campo inválido.
+            MensagemErro = _camposComDataInvalida.Count > 0
+                ? $"A data do campo \"{_camposComDataInvalida.First()}\" está incorreta ou não existe."
+                : "Preencha todas as datas do fluxo SFIT antes de salvar.";
             return false;
         }
 
@@ -341,6 +362,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         {
             _carregando = false;
             _sujo = false;
+            _camposComDataInvalida.Clear();
             NotificarCabecalho();
         }
     }
@@ -467,6 +489,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         {
             _carregando = false;
             _sujo = false;
+            _camposComDataInvalida.Clear();
             NotificarCabecalho();
         }
     }
@@ -540,6 +563,7 @@ public partial class OrdemServicoFormViewModel : ViewModelBase, IDisposable
         {
             _carregando = false;
             _sujo = false;
+            _camposComDataInvalida.Clear();
             NotificarCabecalho();
         }
     }
